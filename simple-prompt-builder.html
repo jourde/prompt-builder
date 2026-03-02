@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Prompt Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #37474f; /* Deep Grey 800 */
+            --accent: #263238;
+            --bg: #f4f7f9;
+            --surface: #ffffff;
+            --border: #cfd8dc;
+            --radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --text-main: #1c1b1f;
+            --text-secondary: #546e7a; /* darkened from #607d8b for WCAG AA contrast */
+            --focus-ring: 0 0 0 3px #fff, 0 0 0 5px #37474f; /* high-contrast 2-layer focus ring */
+        }
+
+        /* Skip to main content link (WCAG 2.4.1) */
+        .skip-link {
+            position: absolute; top: -100px; left: 1rem; z-index: 99999;
+            background: var(--primary); color: #fff; padding: 10px 18px;
+            border-radius: 0 0 8px 8px; font-weight: 700; text-decoration: none;
+            font-size: 0.9rem; transition: top 0.2s;
+        }
+        .skip-link:focus { top: 0; }
+
+        body, html {
+            height: 100%; margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+        }
+
+        .app-wrapper {
+            display: flex; flex-direction: column; height: 100vh;
+        }
+
+        header {
+            background: var(--primary); color: white;
+            padding: 1rem 2.5rem; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        .main-content {
+            display: flex; flex: 1; overflow: hidden; padding: 25px; gap: 25px;
+        }
+
+        /* Unified Panel Styles */
+        .editor-panel, .preview-panel {
+            flex: 1; display: flex; flex-direction: column;
+            background: var(--surface);
+            border-radius: var(--radius); 
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .panel-scroll {
+            flex: 1; overflow-y: auto; padding: 25px;
+        }
+
+        .panel-header {
+            background: #fafafa;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
+            color: var(--primary);
+        }
+
+        /* Form Styling */
+        .field-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+        }
+
+        label { font-weight: 700; color: var(--primary); font-size: 0.9rem; display: block; margin-bottom: 4px; }
+
+        .hint { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; display: block; line-height: 1.4; }
+
+        .input-container { position: relative; margin-bottom: 28px; }
+
+        textarea {
+            width: 100%; border: 1px solid var(--border); border-radius: 8px;
+            padding: 14px 14px 42px 14px; font-size: 1rem; font-family: inherit;
+            resize: vertical; min-height: 90px; box-sizing: border-box;
+            transition: all 0.2s; background-color: #fff;
+        }
+
+        textarea:focus { outline: none; border: 2px solid var(--primary); box-shadow: 0 0 0 4px rgba(55, 71, 79, 0.15); }
+
+        /* Visible focus ring for all interactive elements (WCAG 2.4.7, 2.4.11) */
+        :focus-visible {
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        button:focus-visible, a:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .lazy-prompt { background-color: #fdfdfd; border: 1px dashed var(--border); }
+
+        /* Fullscreen Mode */
+        .fullscreen-btn {
+            position: absolute; bottom: 10px; right: 10px; z-index: 10;
+            background: #eceff1; border: none; cursor: pointer; color: var(--primary);
+            padding: 5px 10px; border-radius: 6px; display: flex; align-items: center; gap: 5px;
+            font-size: 0.75rem; font-weight: 600; font-family: inherit;
+            transition: 0.2s; letter-spacing: 0.3px;
+            /* Always visible for keyboard users; subtler visually at rest */
+            opacity: 0.55;
+        }
+        /* Show fully on hover OR focus (keyboard nav) */
+        .input-container:hover .fullscreen-btn,
+        .fullscreen-btn:focus-visible { opacity: 1; }
+        .fullscreen-btn:hover { background: #cfd8dc; transform: translateY(-1px); opacity: 1; }
+
+        /* Hide-from-prompt toggle button */
+        .hide-toggle-btn {
+            background: none; border: none; cursor: pointer;
+            padding: 2px 6px; border-radius: 4px;
+            color: var(--text-secondary); line-height: 1;
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 0.8rem; font-family: inherit; font-weight: 600;
+            transition: color 0.15s, background 0.15s; opacity: 0.6;
+        }
+        .hide-toggle-btn:hover { opacity: 1; color: var(--primary); background: #eceff1; }
+        .hide-toggle-btn[aria-pressed="true"] { color: #b0bec5; opacity: 1; }
+        .hide-toggle-btn[aria-pressed="true"]:hover { color: #e57373; background: #fff5f5; }
+        .hide-toggle-btn .icon-eye-open  { display: inline-block; }
+        .hide-toggle-btn .icon-eye-slash { display: none; }
+        .hide-toggle-btn[aria-pressed="true"] .icon-eye-open  { display: none; }
+        .hide-toggle-btn[aria-pressed="true"] .icon-eye-slash { display: inline-block; }
+
+        /* Hidden field state */
+        .input-container.field-hidden textarea {
+            opacity: 0.45; border-style: dashed;
+            background-color: #f4f7f9; color: var(--text-secondary);
+        }
+        .input-container.field-hidden > .field-header > label {
+            text-decoration: line-through; color: var(--text-secondary);
+        }
+
+        /* Override label margin when inside flex field-header */
+        .field-header label { margin-bottom: 0; }
+
+        textarea.fullscreen-active {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999; border-radius: 0; padding: 50px; font-size: 1.25rem;
+            background: white; line-height: 1.6;
+        }
+
+        .fs-exit-btn {
+            position: fixed; top: 18px; right: 24px; z-index: 10000;
+            background: var(--primary); color: white; border: none; cursor: pointer;
+            padding: 10px 18px; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+            font-family: inherit; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        .fs-exit-btn:hover { background: var(--accent); transform: translateY(-1px); }
+
+        /* Live Preview Styling */
+        .preview-body {
+            font-family: 'Fira Code', monospace; 
+            font-size: 1rem; 
+            line-height: 1.7;
+            white-space: pre-wrap; 
+            color: #334155;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .tag-h1 { color: #e65100; font-weight: bold; border-bottom: 2px solid #ffccbc; padding-bottom: 2px; }
+
+        /* Actions */
+        .actions { display: flex; gap: 12px; padding: 20px 25px; background: #fafafa; border-top: 1px solid var(--border); }
+        
+        .btn {
+            flex: 1; padding: 14px; border-radius: 8px; border: none;
+            font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .btn-copy { background: var(--primary); color: white; }
+        .btn-download { background: #546e7a; color: white; }
+        .btn-reset { background: transparent; color: #b0bec5; border: 1px solid #cfd8dc; flex: 0.4; }
+
+        .btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .btn-reset:hover { border-color: #90a4ae; color: #607d8b; }
+
+        #save-status { font-weight: 400; text-transform: none; color: #2e7d32; font-size: 0.75rem; } /* darkened green for WCAG AA on #fafafa */
+
+        hr { border: 0; border-top: 1px solid #eceff1; margin: 35px 0; }
+
+        /* Prompt stats counter */
+        .prompt-stats {
+            text-align: right; font-size: 0.78rem; color: var(--text-secondary);
+            margin-top: 10px; font-family: 'Fira Code', monospace;
+        }
+
+        /* Draft reference block in preview */
+        .draft-ref {
+            background: #f8f9fa; border: 1px solid #e8ecef; border-radius: 6px;
+            padding: 12px 16px; margin-bottom: 18px;
+            font-style: italic; font-size: 0.9rem; color: #546e7a; /* WCAG AA on #f8f9fa */
+            font-family: 'Fira Code', monospace; white-space: pre-wrap; line-height: 1.5;
+        }
+        .draft-ref-label {
+            display: block; font-style: normal; font-weight: 700; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 0.5px; color: #546e7a;
+            margin-bottom: 6px; font-family: 'Roboto', sans-serif;
+        }
+
+.example-toggle-btn {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--border);
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            font-size: 0.85rem; font-family: inherit; font-weight: 600;
+            transition: 0.2s; text-align: center;
+        }
+        .example-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: #f4f7f9; }
+        .example-toggle-btn.active { border-color: #b0bec5; color: #b0bec5; }
+        .example-toggle-btn.active:hover { border-color: #e57373; color: #e57373; background: #fff5f5; }
+
+        /* Footer */
+        .app-footer {
+            background: var(--primary); color: rgba(255,255,255,0.6);
+            padding: 8px 2.5rem; display: flex; justify-content: flex-end; align-items: center;
+            font-size: 0.75rem;
+        }
+        .footer-legal-btn {
+            background: none; border: none; cursor: pointer;
+            color: rgba(255,255,255,0.6); font-size: 0.75rem; font-family: inherit;
+            padding: 4px 8px; border-radius: 4px; transition: 0.2s;
+            text-decoration: underline; text-underline-offset: 2px;
+        }
+        .footer-legal-btn:hover { color: white; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 20000;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: white; border-radius: var(--radius);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+            width: min(640px, 92vw); max-height: 80vh;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        .modal-header {
+            background: var(--primary); color: white;
+            padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+        .modal-close {
+            background: none; border: none; color: white; cursor: pointer;
+            font-size: 1.2rem; line-height: 1; padding: 4px 8px; border-radius: 4px;
+            transition: 0.15s;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.15); }
+        .modal-body {
+            overflow-y: auto; padding: 24px 28px; font-size: 0.88rem;
+            line-height: 1.7; color: var(--text-main);
+        }
+        .modal-body h3 {
+            font-size: 0.85rem; font-weight: 700; color: var(--primary);
+            margin: 20px 0 6px; text-transform: uppercase; letter-spacing: 0.4px;
+        }
+        .modal-body h3:first-child { margin-top: 0; }
+        .modal-body p { margin: 0 0 10px; }
+        .modal-body ul { margin: 6px 0 10px; padding-left: 20px; }
+        .modal-body ul li { margin-bottom: 4px; }
+        .modal-body a { color: var(--primary); }
+
+        @media (max-width: 900px) {
+            .main-content { flex-direction: column; overflow-y: auto; }
+            .editor-panel, .preview-panel { min-height: 600px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Skip to main content (WCAG 2.4.1) -->
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<div class="app-wrapper">
+    <header role="banner">
+        <div>
+            <h1 style="margin:0; font-size: 1.5rem; letter-spacing: -0.5px;">Simple Prompt Builder</h1>
+            <span style="font-size: 0.85rem; opacity: 0.9;">Structure your thinking. Shape the output.</span>
+        </div>
+        <button class="btn btn-reset" onclick="resetForm()">Clear Data</button>
+    </header>
+
+    <!-- aria-live region for status announcements (WCAG 4.1.3) -->
+    <div id="a11y-announce" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
+
+    <main id="main-content" class="main-content">
+        <section class="editor-panel" aria-label="Prompt input builder">
+            <div class="panel-header" aria-hidden="true">Input Builder</div>
+            <div class="panel-scroll">
+                <div class="input-container">
+                    <label for="draft">Initial Request (for reference)</label>
+                    <span id="hint-draft" class="hint">Your raw idea. Example: "Write a report on school safety."</span>
+                    <textarea id="draft" class="lazy-prompt" placeholder="Type or paste your initial idea here..."
+                        aria-describedby="hint-draft"></textarea>
+                </div>
+
+                <hr aria-hidden="true">
+
+                <div class="input-container" id="container-persona">
+                    <div class="field-header">
+                        <label for="persona"># PERSONA/ROLE</label>
+                        <button class="hide-toggle-btn" id="hide-btn-persona" aria-pressed="false"
+                            aria-label="Hide Persona/Role from prompt"
+                            onclick="toggleHide('persona', 'Persona/Role')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-persona" class="hint">Role (e.g., Senior Audit Expert with expertise in Administrative Law).</span>
+                    <textarea id="persona" placeholder="Act as a..."
+                        aria-describedby="hint-persona"></textarea>
+                    <button class="fullscreen-btn" onclick="toggleFS('persona')" aria-label="Expand Persona/Role to fullscreen">⛶ Fullscreen</button>
+                </div>
+
+                <div class="input-container" id="container-context">
+                    <div class="field-header">
+                        <label for="context"># CONTEXT</label>
+                        <button class="hide-toggle-btn" id="hide-btn-context" aria-pressed="false"
+                            aria-label="Hide Context from prompt"
+                            onclick="toggleHide('context', 'Context')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-context" class="hint">Background details (e.g., Decree-Law 54/2018, specific complaints).</span>
+                    <textarea id="context" placeholder="This task arises from..."
+                        aria-describedby="hint-context"></textarea>
+                    <button class="fullscreen-btn" onclick="toggleFS('context')" aria-label="Expand Context to fullscreen">⛶ Fullscreen</button>
+                </div>
+
+                <div class="input-container" id="container-objective">
+                    <div class="field-header">
+                        <label for="objective"># OBJECTIVE</label>
+                        <button class="hide-toggle-btn" id="hide-btn-objective" aria-pressed="false"
+                            aria-label="Hide Objective from prompt"
+                            onclick="toggleHide('objective', 'Objective')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-objective" class="hint">Exact action or outcome desired.</span>
+                    <textarea id="objective" placeholder="The main goal is to..."
+                        aria-describedby="hint-objective"></textarea>
+                    <button class="fullscreen-btn" onclick="toggleFS('objective')" aria-label="Expand Objective to fullscreen">⛶ Fullscreen</button>
+                </div>
+
+                <div class="input-container" id="container-audience">
+                    <div class="field-header">
+                        <label for="audience"># AUDIENCE</label>
+                        <button class="hide-toggle-btn" id="hide-btn-audience" aria-pressed="false"
+                            aria-label="Hide Audience from prompt"
+                            onclick="toggleHide('audience', 'Audience')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-audience" class="hint">Who is reading the output? (e.g., School Board of Directors).</span>
+                    <textarea id="audience" placeholder="The target audience is..."
+                        aria-describedby="hint-audience"></textarea>
+                    <button class="fullscreen-btn" onclick="toggleFS('audience')" aria-label="Expand Audience to fullscreen">⛶ Fullscreen</button>
+                </div>
+
+                <div class="input-container" id="container-boundaries">
+                    <div class="field-header">
+                        <label for="boundaries"># BOUNDARIES & STYLE</label>
+                        <button class="hide-toggle-btn" id="hide-btn-boundaries" aria-pressed="false"
+                            aria-label="Hide Boundaries &amp; Style from prompt"
+                            onclick="toggleHide('boundaries', 'Boundaries &amp; Style')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-boundaries" class="hint">Format, tone, length, or constraints (e.g., technical tone, max 2 pages).</span>
+                    <textarea id="boundaries" placeholder="Ensure the response is..."
+                        aria-describedby="hint-boundaries"></textarea>
+                    <button class="fullscreen-btn" onclick="toggleFS('boundaries')" aria-label="Expand Boundaries & Style to fullscreen">⛶ Fullscreen</button>
+                </div>
+
+                <hr aria-hidden="true">
+
+                <div class="input-container" id="example-container" style="display:none;">
+                    <label for="example"># EXAMPLE</label>
+                    <span id="hint-example" class="hint">An illustrative example of the expected output format or content.</span>
+                    <textarea id="example" placeholder="For example..."
+                        aria-describedby="hint-example"></textarea>
+                    <button class="fullscreen-btn" onclick="toggleFS('example')" aria-label="Expand Example to fullscreen">⛶ Fullscreen</button>
+                </div>
+                <button id="example-toggle-btn" class="example-toggle-btn" onclick="toggleExample()"
+                    aria-expanded="false" aria-controls="example-container">
+                    + Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="preview-panel" aria-label="Live prompt preview">
+            <div class="panel-header">
+                Live Master Prompt Preview
+                <span id="save-status" aria-live="polite" aria-atomic="true">Saved</span>
+            </div>
+            <div class="panel-scroll" style="background-color: #fcfcfc;">
+                <div id="preview-body" class="preview-body" role="region" aria-label="Generated prompt" aria-live="polite" aria-atomic="true"></div>
+                <div id="prompt-stats" class="prompt-stats" aria-live="polite" aria-atomic="true"></div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-copy" onclick="copyToClipboard()" title="Copy to Clipboard (Ctrl+Shift+C / ⌘⇧C)"
+                    aria-label="Copy prompt to clipboard">Copy to Clipboard</button>
+                <button class="btn btn-download" onclick="downloadPrompt()"
+                    aria-label="Export prompt as Markdown file">Export .md</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <button class="footer-legal-btn" onclick="openLegal()" aria-haspopup="dialog">Legal Notice &amp; Privacy Policy</button>
+    </footer>
+</div>
+
+<!-- Legal Notice Modal -->
+<div class="modal-overlay" id="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-modal-title">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="legal-modal-title">Legal Notice &amp; Privacy Policy</h2>
+            <button class="modal-close" onclick="closeLegal()" aria-label="Close legal notice">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+            <h3>1. Publisher &amp; Hosting</h3>
+            <p><strong>Publisher:</strong> The Simple Prompt Builder application is published by François Jourde.</p>
+            <p><strong>Hosting:</strong> This site is hosted by GitHub Inc. Address: 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States.</p>
+
+            <h3>2. How the Application Works &amp; Personal Data</h3>
+            <p>This application was designed following a <em>Privacy by Design</em> approach (privacy by default).</p>
+            <p><strong>No data collection:</strong> The application runs entirely in <em>client-side</em> mode in your web browser.</p>
+            <ul>
+                <li>No data entered or processed in the application is transmitted to the publisher.</li>
+                <li>No data is stored on a remote server (cloud database).</li>
+            </ul>
+            <p>All information remains strictly confined to your device (computer or smartphone).</p>
+
+            <h3>3. Local Storage</h3>
+            <p>To enable the application to function (e.g. saving your preferences or progress), we use your browser's <em>localStorage</em> technology.</p>
+            <ul>
+                <li>This data is stored only on your device.</li>
+                <li>It is accessible only to you.</li>
+                <li>These mechanisms are purely technical and functional, and are therefore exempt from prior consent (no cookie banner required).</li>
+            </ul>
+            <p>You can delete this data at any time by clearing your browser cache.</p>
+
+            <h3>4. Technical Data (Server Logs)</h3>
+            <p>Although the publisher does not collect any data, the hosting infrastructure (GitHub Pages) may collect standard technical data when you connect (such as your IP address and browser type) in connection logs, for security and service reliability purposes.</p>
+            <p>The publisher of this site does not have access to this raw data. For more information, you may consult <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub's Privacy Statement</a>.</p>
+
+            <h3>5. Third-Party Services</h3>
+            <p>This site may load technical resources (fonts, JavaScript libraries) from third-party servers (e.g. Google Fonts, cdnjs). These services may technically have access to your IP address when these resources are loaded.</p>
+
+            <h3>6. Contact</h3>
+            <p>For any questions regarding the application, you may contact the publisher via <a href="https://github.com/jourde" target="_blank" rel="noopener">github.com/jourde</a>.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const fields = ['draft', 'persona', 'context', 'objective', 'audience', 'boundaries', 'example'];
+
+    const HIDEABLE_FIELDS = [
+        { id: 'persona',    label: 'Persona/Role',      heading: '# PERSONA/ROLE' },
+        { id: 'context',    label: 'Context',            heading: '# CONTEXT' },
+        { id: 'objective',  label: 'Objective',          heading: '# OBJECTIVE' },
+        { id: 'audience',   label: 'Audience',           heading: '# AUDIENCE' },
+        { id: 'boundaries', label: 'Boundaries & Style', heading: '# BOUNDARIES & STYLE' },
+    ];
+    const hiddenFields = new Set();
+    
+    window.onload = () => {
+        fields.forEach(id => {
+            const saved = localStorage.getItem('igec_en_' + id);
+            if (saved) document.getElementById(id).value = saved;
+
+            document.getElementById(id).addEventListener('input', () => {
+                updatePreview();
+                saveLocal(id);
+            });
+        });
+        // Keyboard shortcut: Ctrl/Cmd + Shift + C → Copy to Clipboard
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                copyToClipboard();
+            }
+        });
+
+        // Restore hidden field state
+        HIDEABLE_FIELDS.forEach(({ id, label }) => {
+            if (localStorage.getItem('igec_en_' + id + '_hidden') === 'true') {
+                hiddenFields.add(id);
+                applyHiddenState(id, label, true);
+            }
+        });
+
+        // Restore example visibility
+        if (localStorage.getItem('igec_en_example_visible') === 'true') {
+            document.getElementById('example-container').style.display = 'block';
+            const btn = document.getElementById('example-toggle-btn');
+            btn.textContent = '− Remove Example';
+            btn.classList.add('active');
+            btn.setAttribute('aria-expanded', 'true');
+        }
+        updatePreview();
+    };
+
+    function applyHiddenState(id, label, isHidden) {
+        const container = document.getElementById('container-' + id);
+        const btn = document.getElementById('hide-btn-' + id);
+        container.classList.toggle('field-hidden', isHidden);
+        btn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+        btn.setAttribute('aria-label', isHidden
+            ? 'Show ' + label + ' in prompt'
+            : 'Hide ' + label + ' from prompt');
+    }
+
+    function toggleHide(id, label) {
+        const isNowHidden = !hiddenFields.has(id);
+        isNowHidden ? hiddenFields.add(id) : hiddenFields.delete(id);
+        localStorage.setItem('igec_en_' + id + '_hidden', isNowHidden ? 'true' : 'false');
+        applyHiddenState(id, label, isNowHidden);
+        updatePreview();
+        announce(isNowHidden ? label + ' hidden from prompt.' : label + ' included in prompt.');
+    }
+
+    function updatePreview() {
+        const segments = HIDEABLE_FIELDS
+            .filter(({ id }) => !hiddenFields.has(id))
+            .map(({ id, heading }) => {
+                const val = document.getElementById(id).value
+                    || '(' + heading.slice(2) + ' not defined)';
+                return heading + '\n' + val;
+            });
+
+        const exampleVisible = document.getElementById('example-container').style.display !== 'none';
+        if (exampleVisible) {
+            const e = document.getElementById('example').value || '(EXAMPLE not defined)';
+            segments.push('# EXAMPLE\n' + e);
+        }
+
+        const template = segments.join('\n\n');
+        const highlighted = template.replace(/(# [A-Z &\/]+)/g, '<span class="tag-h1">$1</span>');
+        document.getElementById('preview-body').innerHTML = highlighted;
+
+        const words = template.trim().split(/\s+/).filter(Boolean).length;
+        const chars = template.length;
+        document.getElementById('prompt-stats').textContent =
+            `${words} words · ${chars.toLocaleString()} characters`;
+    }
+
+    function announce(msg) {
+        const el = document.getElementById('a11y-announce');
+        el.textContent = '';
+        // Small delay so screen readers re-announce even identical text
+        setTimeout(() => { el.textContent = msg; }, 50);
+    }
+
+    function saveLocal(id) {
+        localStorage.setItem('igec_en_' + id, document.getElementById(id).value);
+        const status = document.getElementById('save-status');
+        status.innerText = "Syncing...";
+        status.style.color = "#f57c00"; /* darkened amber for contrast on #fafafa */
+
+        clearTimeout(window.saveTimer);
+        window.saveTimer = setTimeout(() => {
+            status.innerText = "Saved to browser";
+            status.style.color = "#2e7d32"; /* darkened green for WCAG AA */
+        }, 1000);
+    }
+
+    function toggleFS(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('fullscreen-active');
+        if (el.classList.contains('fullscreen-active')) {
+            el.focus();
+            // Trap focus: Escape exits fullscreen
+            el.onkeydown = (e) => { if (e.key === "Escape") toggleFS(id); };
+
+            const exitBtn = document.createElement('button');
+            exitBtn.className = 'fs-exit-btn';
+            exitBtn.id = 'fs-exit-btn';
+            exitBtn.innerHTML = '&#x2715; Back to Normal View';
+            exitBtn.setAttribute('aria-label', 'Exit fullscreen and return to normal view');
+            exitBtn.onclick = () => toggleFS(id);
+            // Keep Tab focus inside fullscreen (textarea ↔ exit button)
+            exitBtn.onkeydown = (e) => {
+                if (e.key === 'Tab') { e.preventDefault(); el.focus(); }
+                if (e.key === 'Escape') toggleFS(id);
+            };
+            el.onkeydown = (e) => {
+                if (e.key === 'Escape') toggleFS(id);
+                if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); exitBtn.focus(); }
+            };
+            document.body.appendChild(exitBtn);
+            announce('Fullscreen mode. Press Escape or Tab to the exit button to return.');
+        } else {
+            const exitBtn = document.getElementById('fs-exit-btn');
+            if (exitBtn) exitBtn.remove();
+            el.onkeydown = null;
+            announce('Returned to normal view.');
+        }
+    }
+
+    function toggleExample() {
+        const container = document.getElementById('example-container');
+        const btn = document.getElementById('example-toggle-btn');
+        const isVisible = container.style.display !== 'none';
+        if (isVisible) {
+            container.style.display = 'none';
+            btn.innerHTML = '+ Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>';
+            btn.classList.remove('active');
+            btn.setAttribute('aria-expanded', 'false');
+            localStorage.setItem('igec_en_example_visible', 'false');
+            announce('Example section hidden.');
+        } else {
+            container.style.display = 'block';
+            btn.textContent = '− Remove Example';
+            btn.classList.add('active');
+            btn.setAttribute('aria-expanded', 'true');
+            localStorage.setItem('igec_en_example_visible', 'true');
+            document.getElementById('example').focus();
+            announce('Example section shown.');
+        }
+        updatePreview();
+    }
+
+    function copyToClipboard() {
+        const text = document.getElementById('preview-body').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            const originalText = btn.innerText;
+            btn.innerText = "✓ Copied!";
+            announce('Prompt copied to clipboard.');
+            setTimeout(() => btn.innerText = originalText, 2000);
+        });
+    }
+
+    function downloadPrompt() {
+        const text = document.getElementById('preview-body').innerText;
+        const blob = new Blob([text], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `prompt_${new Date().toISOString().split('T')[0]}.md`;
+        a.click();
+    }
+
+    function openLegal() {
+        const modal = document.getElementById('legal-modal');
+        modal.classList.add('open');
+        modal.querySelector('.modal-close').focus();
+        document.addEventListener('keydown', legalKeyHandler);
+    }
+
+    function closeLegal() {
+        document.getElementById('legal-modal').classList.remove('open');
+        document.removeEventListener('keydown', legalKeyHandler);
+        document.querySelector('.footer-legal-btn').focus();
+    }
+
+    function legalKeyHandler(e) {
+        if (e.key === 'Escape') closeLegal();
+        // Trap Tab focus inside modal
+        if (e.key === 'Tab') {
+            const modal = document.getElementById('legal-modal');
+            const focusable = [...modal.querySelectorAll('a, button')];
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault(); last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault(); first.focus();
+            }
+        }
+    }
+
+    // Close modal on overlay click
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'legal-modal') closeLegal();
+    });
+
+    function resetForm() {
+        if(confirm("Are you sure you want to clear all inputs? This cannot be undone.")) {
+            fields.forEach(id => {
+                document.getElementById(id).value = '';
+                localStorage.removeItem('igec_en_' + id);
+            });
+            HIDEABLE_FIELDS.forEach(({ id, label }) => {
+                hiddenFields.delete(id);
+                localStorage.removeItem('igec_en_' + id + '_hidden');
+                applyHiddenState(id, label, false);
+            });
+            document.getElementById('example-container').style.display = 'none';
+            const btn = document.getElementById('example-toggle-btn');
+            btn.innerHTML = '+ Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>';
+            btn.classList.remove('active');
+            localStorage.removeItem('igec_en_example_visible');
+            updatePreview();
+        }
+    }
+</script>
+
+</body>
+</html>
