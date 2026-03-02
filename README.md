@@ -3,6 +3,7 @@ Simple Prompt Builder is a lightweight, privacy-first HTML application designed 
 Simple Prompt Builder is designed to reduce ambiguity, improve output quality, and make prompt engineering systematic rather than improvised.
 - [https://jourde.github.io/prompt-builder/simple-prompt-builder.html](https://jourde.github.io/prompt-builder/simple-prompt-builder.html)
 
+
 ## Purpose
 
 Many AI outputs fail due to vague or poorly structured instructions. This tool enforces a clear framework so you can:
@@ -15,8 +16,6 @@ Many AI outputs fail due to vague or poorly structured instructions. This tool e
 - Optionally include an **Example**
 
 The result is a clean, consolidated master prompt ready to copy or export.
-
----
 
 ## Key Features
 
@@ -49,8 +48,6 @@ Segmented input fields guide users through best-practice prompt design. Each sec
 - Optional Example section toggle  
 - Clear/reset function  
 
----
-
 ## How It Works
 
 All content is processed directly in the browser. The app:
@@ -69,8 +66,6 @@ No installation or configuration is required.
 - CSS-based responsive layout  
 - WCAG-conscious design decisions  
 - Markdown export via Blob API  
-
----
 
 ## Deployment
 
