@@ -4,4 +4,4 @@ Simple Prompt Builder is designed to reduce ambiguity, improve output quality, a
 - [https://jourde.github.io/prompt-builder/simple-prompt-builder.html](https://jourde.github.io/prompt-builder/simple-prompt-builder.html)
 
 ## varia
-- Input form: [Prompt Builder — Co-design](https://jourde.github.io/prompt-builder/varia/input-form.html)
+- Input form: [Prompt Builder — Co-design](https://jourde.github.io/prompt-builder/forms/input-edsup.html)
