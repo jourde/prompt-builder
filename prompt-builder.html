@@ -322,7 +322,7 @@
                             <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                         </button>
                     </div>
-                    <span id="hint-persona" class="hint">Role (e.g., Senior Audit Expert with expertise in Administrative Law).</span>
+                    <span id="hint-persona" class="hint">The role GenAI should take on (e.g., experienced primary school teacher, special needs coordinator, school administrator).</span>
                     <textarea id="persona" placeholder="Act as a..."
                         aria-describedby="hint-persona"></textarea>
                     <button class="fullscreen-btn" onclick="toggleFS('persona')" aria-label="Expand Persona/Role to fullscreen">⛶ Fullscreen</button>
@@ -338,7 +338,7 @@
                             <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                         </button>
                     </div>
-                    <span id="hint-context" class="hint">Background details (e.g., Decree-Law 54/2018, specific complaints).</span>
+                    <span id="hint-context" class="hint">Relevant background (e.g., year group, subject, school type, specific situation or document you are working from).</span>
                     <textarea id="context" placeholder="This task arises from..."
                         aria-describedby="hint-context"></textarea>
                     <button class="fullscreen-btn" onclick="toggleFS('context')" aria-label="Expand Context to fullscreen">⛶ Fullscreen</button>
@@ -354,7 +354,7 @@
                             <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                         </button>
                     </div>
-                    <span id="hint-objective" class="hint">Exact action or outcome desired.</span>
+                    <span id="hint-objective" class="hint">What you want GenAI to produce or do (e.g., draft a letter, summarise a report, create a lesson plan).</span>
                     <textarea id="objective" placeholder="The main goal is to..."
                         aria-describedby="hint-objective"></textarea>
                     <button class="fullscreen-btn" onclick="toggleFS('objective')" aria-label="Expand Objective to fullscreen">⛶ Fullscreen</button>
@@ -370,7 +370,7 @@
                             <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                         </button>
                     </div>
-                    <span id="hint-audience" class="hint">Who is reading the output? (e.g., School Board of Directors).</span>
+                    <span id="hint-audience" class="hint">Who will read or use the output (e.g., parents, pupils aged 10–11, teaching staff, school management).</span>
                     <textarea id="audience" placeholder="The target audience is..."
                         aria-describedby="hint-audience"></textarea>
                     <button class="fullscreen-btn" onclick="toggleFS('audience')" aria-label="Expand Audience to fullscreen">⛶ Fullscreen</button>
@@ -386,7 +386,7 @@
                             <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                         </button>
                     </div>
-                    <span id="hint-boundaries" class="hint">Format, tone, length, or constraints (e.g., technical tone, max 2 pages).</span>
+                    <span id="hint-boundaries" class="hint">Tone, format, length, or things to avoid (e.g., plain language, bullet points, max one page, no jargon).</span>
                     <textarea id="boundaries" placeholder="Ensure the response is..."
                         aria-describedby="hint-boundaries"></textarea>
                     <button class="fullscreen-btn" onclick="toggleFS('boundaries')" aria-label="Expand Boundaries & Style to fullscreen">⛶ Fullscreen</button>
@@ -396,7 +396,7 @@
 
                 <div class="input-container" id="example-container" style="display:none;">
                     <label for="example"># EXAMPLE</label>
-                    <span id="hint-example" class="hint">An illustrative example of the expected output format or content.</span>
+                    <span id="hint-example" class="hint">A sample of the kind of output you expect — useful for tone, structure, or level of detail.</span>
                     <textarea id="example" placeholder="For example..."
                         aria-describedby="hint-example"></textarea>
                     <button class="fullscreen-btn" onclick="toggleFS('example')" aria-label="Expand Example to fullscreen">⛶ Fullscreen</button>
