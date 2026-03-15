@@ -1,0 +1,58 @@
+I am going to give you two documents:
+  1. A consolidated analysis of responses from educational support coordinators, organised 
+     under four headings with interface recommendations for each item.
+  2. An existing HTML file: prompt-builder.html
+
+Your task is to produce an updated version of the HTML file that replaces the five 
+free-text fields with richer, structured input components tailored to the coordinators' 
+professional needs. The updated interface must still generate a clean, structured text 
+prompt in the live preview panel on the right.
+
+══════════════════════════════════
+DECISIONS YOU MUST MAKE
+══════════════════════════════════
+
+For each of the four headings in the analysis, read the interface recommendation column 
+and apply the following rules:
+
+  FREE TEXT
+  Keep as a textarea. Update the hint and placeholder using the consolidated items as 
+  examples. If there are 3 or more consolidated items, list them as placeholder examples 
+  separated by line breaks.
+
+  DROP-DOWN
+  Replace the textarea with a <select> element. Each consolidated item becomes an 
+  <option>. Always include a first option: "— Select —" (disabled, selected by default).
+  Add a short free-text field below labelled "Or specify:" so the user can enter a value 
+  not in the list.
+
+  TICK BOXES
+  Replace the textarea with a group of <input type="checkbox"> elements, one per 
+  consolidated item. Lay them out in a two-column grid. Add a short free-text field at 
+  the bottom of the group labelled "Other:" for values not in the list.
+
+  MIXED (when a heading contains items of different recommended types)
+  Use your judgement to group the items logically. A common pattern is: drop-down or 
+  tick boxes for the structured items, followed by a free-text field for open-ended 
+  additions. Label the free-text field "Additional details:".
+
+══════════════════════════════════
+PROMPT GENERATION RULES
+══════════════════════════════════
+
+The live preview panel must continue to generate a valid, readable prompt from all 
+inputs. Apply these rules when updating the updatePreview() function:
+
+  - Drop-down: output the selected value, or nothing if "— Select —" is still active.
+  - Tick boxes: output all checked items as a comma-separated list.
+  - Free-text additions ("Or specify:", "Other:", "Additional details:"): append to the 
+    structured output, separated by a semicolon.
+  - If a field is entirely empty or unselected, output the existing placeholder text 
+    "(FIELD NAME not defined)" as before.
+
+══════════════════════════════════
+WHAT TO CHANGE
+══════════════════════════════════
+
+  1. Page title and header h1 → "Prompt Builder — Educational Support"
+  2. Header subtitle → "Supporting coordinators in European Scho
