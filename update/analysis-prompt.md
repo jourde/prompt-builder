@@ -10,10 +10,12 @@ Analyse all responses and produce a clean, consolidated list organised under the
 headings below. For each heading, follow the three-step process.
 
 Headings:
+```
   # PERSONA / ROLE
   # OBJECTIVE
   # AUDIENCE
   # BOUNDARIES & STYLE
+```
 
 Three-step process for each heading:
 
