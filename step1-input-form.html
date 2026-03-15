@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Builder – Co-design Input Form</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #37474f;
+      --accent: #263238;
+      --bg: #f4f7f9;
+      --surface: #ffffff;
+      --border: #cfd8dc;
+      --radius: 12px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --text-main: #1c1b1f;
+      --text-secondary: #546e7a;
+      --focus-ring: 0 0 0 3px #fff, 0 0 0 5px #37474f;
+      --card-accent: #e8eef1;
+      --step-color: #37474f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body, html {
+      margin: 0; padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1.1rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: -0.4px;
+      font-weight: 700;
+    }
+    header .subtitle {
+      font-size: 0.82rem;
+      opacity: 0.85;
+      margin-top: 2px;
+      font-weight: 300;
+    }
+    .header-badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    /* ── INTRO STRIP ── */
+    .intro-strip {
+      background: var(--accent);
+      color: rgba(255,255,255,0.88);
+      padding: 0.9rem 2.5rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      border-bottom: 3px solid #546e7a;
+    }
+    .intro-strip strong { color: #fff; }
+
+    /* ── MAIN LAYOUT ── */
+    .main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 1.4rem;
+      margin-top: 0.5rem;
+    }
+    .section-label .step-pill {
+      background: var(--primary);
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .section-label .step-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1.4rem;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .card:focus-within {
+      box-shadow: 0 4px 20px rgba(55,71,79,0.18);
+      border-color: #90a4ae;
+    }
+
+    .card-header {
+      background: #fafafa;
+      border-bottom: 1px solid var(--border);
+      padding: 13px 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-number {
+      width: 28px; height: 28px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .card-label {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .card-tag {
+      margin-left: auto;
+      font-size: 0.72rem;
+      font-family: 'Fira Code', monospace;
+      color: var(--text-secondary);
+      background: var(--card-accent);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .card-body {
+      padding: 18px 22px 22px;
+    }
+
+    .card-question {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+    .card-hint {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 90px;
+      background: #fff;
+      color: var(--text-main);
+      transition: border 0.2s, box-shadow 0.2s;
+      line-height: 1.55;
+    }
+    textarea:focus {
+      outline: none;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 0 4px rgba(55,71,79,0.12);
+    }
+    textarea::placeholder {
+      color: #b0bec5;
+      font-style: italic;
+    }
+
+    /* Card 3 gets slightly more height for the list */
+    #objectives { min-height: 120px; }
+
+    /* ── PROMPT SECTION LABEL inside card ── */
+    .prompt-ref {
+      display: inline-block;
+      font-size: 0.74rem;
+      font-family: 'Fira Code', monospace;
+      color: #e65100;
+      background: #fff3e0;
+      border: 1px solid #ffcc80;
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    /* ── ACTIONS ── */
+    .actions-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 22px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 11px 22px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-family: inherit;
+      display: flex; align-items: center; gap: 7px;
+      transition: 0.2s;
+    }
+    .btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: #546e7a; color: white; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: #90a4ae; color: var(--primary); background: #f4f7f9; }
+
+    #copy-status {
+      font-size: 0.8rem;
+      color: #2e7d32;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+      margin-left: 4px;
+    }
+    #copy-status.visible { opacity: 1; }
+
+    /* ── COLLECTED OUTPUT ── */
+    #output-section {
+      display: none;
+      margin-top: 1.5rem;
+    }
+    #output-section .panel-header {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 13px 22px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #output-body {
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      background: #fff;
+      padding: 20px 22px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.88rem;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      color: #334155;
+    }
+    .out-heading { color: #e65100; font-weight: bold; }
+
+    /* ── PROGRESS DOTS ── */
+    .progress-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding: 0 2px;
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .dot.filled { background: var(--primary); }
+    .progress-label {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-left: 8px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--primary);
+      color: rgba(255,255,255,0.55);
+      text-align: right;
+      padding: 8px 2.5rem;
+      font-size: 0.72rem;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      header .header-badge, .actions-bar, #output-section, footer { display: none !important; }
+      .card { break-inside: avoid; }
+      body { background: white; }
+    }
+
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 1rem 1.2rem; }
+      .main { padding: 1.2rem 1rem 2rem; }
+      .intro-strip { padding: 0.8rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header role="banner">
+  <div>
+    <h1>Prompt Builder — Co-design</h1>
+    <div class="subtitle">Step 1 · Input Collection Form · Educational Support Coordinators</div>
+  </div>
+  <div class="header-badge">European Schools</div>
+</header>
+
+<div class="intro-strip">
+  <strong>Your task:</strong> Complete the five fields below. Your answers will be used collectively to adapt the Prompt Builder to the real needs of educational support coordinators. There are no right or wrong answers — specific, concrete examples are the most useful.
+</div>
+
+<main class="main">
+
+  <div class="progress-bar" id="progress-bar" aria-label="Form completion">
+    <div class="dot" id="dot-1"></div>
+    <div class="dot" id="dot-2"></div>
+    <div class="dot" id="dot-3"></div>
+    <div class="dot" id="dot-4"></div>
+    <div class="dot" id="dot-5"></div>
+    <span class="progress-label" id="progress-label">0 / 5 fields completed</span>
+  </div>
+
+  <!-- CARD 1: ROLE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">1</div>
+      <div class="card-label">Your Professional Role</div>
+      <div class="card-tag"># PERSONA / ROLE</div>
+    </div>
+    <div class="card-body">
+      <div class="card-question">How would you describe your role and professional identity when using AI assistance?</div>
+      <div class="card-hint">Think about your title, the type of school you work in, the pupil profiles you support, and any relevant specialisms (e.g. inclusion, language support, SEN coordination).</div>
+      <textarea id="role"
+        placeholder="e.g. Educational support coordinator working with pupils with special educational needs in a multilingual European School, with experience in inclusion frameworks and IEP coordination."
+        aria-label="Your professional role"></textarea>
+    </div>
+  </div>
+
+  <!-- CARD 2: CONTEXT -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">2</div>
+      <div class="card-label">Typical Working Contexts</div>
+      <div class="card-tag"># CONTEXT</div>
+    </div>
+    <div class="card-body">
+      <div class="card-question">What background situations or frameworks do you most often need to describe when asking AI for help?</div>
+      <div class="card-hint">For example: regulatory frameworks, types of meetings, assessment processes, referral procedures, inter-agency work, or institutional constraints specific to European Schools.</div>
+      <textarea id="context"
+        placeholder="e.g. Working within the European Schools regulatory framework for SEN (2012 policy), preparing documentation for Advisory Committees, coordinating with external specialists and class councils."
+        aria-label="Typical working contexts"></textarea>
+    </div>
+  </div>
+
+  <!-- CARD 3: OBJECTIVES -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">3</div>
+      <div class="card-label">Most Common Tasks & Objectives</div>
+      <div class="card-tag"># OBJECTIVE</div>
+    </div>
+    <div class="card-body">
+      <div class="card-question">List 3 to 5 tasks you carry out regularly where AI assistance could genuinely help.</div>
+      <div class="card-hint">Be as specific as possible. Think about documents you draft, meetings you prepare, communications you write, or analyses you carry out. These will anchor the group discussion.</div>
+      <textarea id="objectives"
+        placeholder="e.g.&#10;1. Drafting individual educational support plans (IEPs/RSPs)&#10;2. Writing summaries of psycho-pedagogical assessment reports for class teachers&#10;3. Preparing minutes and action points from class council meetings&#10;4. Composing differentiated communication for parents in accessible language&#10;5. Creating accommodation checklists for subject teachers"
+        aria-label="Most common tasks and objectives"></textarea>
+    </div>
+  </div>
+
+  <!-- CARD 4: AUDIENCE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">4</div>
+      <div class="card-label">Your Audiences</div>
+      <div class="card-tag"># AUDIENCE</div>
+    </div>
+    <div class="card-body">
+      <div class="card-question">Who most often reads the documents or outputs you produce?</div>
+      <div class="card-hint">Different audiences may require very different tone and language. List all relevant readers — some documents may have multiple audiences (e.g. a report read by both a director and a parent).</div>
+      <textarea id="audience"
+        placeholder="e.g. Class teachers, subject teachers, school director, parents (varying levels of familiarity with educational terminology), external psychologists, pupils themselves (secondary level), Advisory Committee members."
+        aria-label="Your audiences"></textarea>
+    </div>
+  </div>
+
+  <!-- CARD 5: BOUNDARIES -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">5</div>
+      <div class="card-label">Format & Constraints</div>
+      <div class="card-tag"># BOUNDARIES & STYLE</div>
+    </div>
+    <div class="card-body">
+      <div class="card-question">What are the most common format, tone, or length requirements in your work?</div>
+      <div class="card-hint">Consider: register (formal/accessible), length limits, language requirements (bilingual output?), institutional templates, confidentiality constraints, or anything that shapes how documents must be presented.</div>
+      <textarea id="boundaries"
+        placeholder="e.g. Formal but accessible register; documents often need to be under 2 pages; bilingual output (English + French) frequently required; must avoid jargon when writing for parents; always anonymise pupil data."
+        aria-label="Format and constraints"></textarea>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions-bar">
+    <button class="btn btn-primary" onclick="collectResponses()">▶ Collect &amp; Preview Responses</button>
+    <button class="btn btn-secondary" onclick="copyOutput()">⎘ Copy for Vibe Coding</button>
+    <span id="copy-status">✓ Copied to clipboard</span>
+    <button class="btn btn-ghost" onclick="clearForm()" style="margin-left:auto;">✕ Clear Form</button>
+  </div>
+
+  <!-- OUTPUT PREVIEW -->
+  <div id="output-section">
+    <div class="panel-header">
+      Collected Input Preview
+      <span style="font-size:0.72rem; font-weight:400; color:var(--text-secondary);">Ready to use in vibe coding prompt</span>
+    </div>
+    <div id="output-body"></div>
+  </div>
+
+</main>
+
+<footer>
+  Educational Support Co-design · European Schools AI Training
+</footer>
+
+<script>
+  const fieldIds = ['role', 'context', 'objectives', 'audience', 'boundaries'];
+
+  // ── SAVE TO LOCALSTORAGE ──
+  fieldIds.forEach(id => {
+    const el = document.getElementById(id);
+    const saved = localStorage.getItem('codesign_' + id);
+    if (saved) el.value = saved;
+
+    el.addEventListener('input', () => {
+      localStorage.setItem('codesign_' + id, el.value);
+      updateProgress();
+    });
+  });
+
+  // ── PROGRESS DOTS ──
+  function updateProgress() {
+    let filled = 0;
+    fieldIds.forEach((id, i) => {
+      const hasValue = document.getElementById(id).value.trim().length > 0;
+      document.getElementById('dot-' + (i + 1)).classList.toggle('filled', hasValue);
+      if (hasValue) filled++;
+    });
+    document.getElementById('progress-label').textContent = filled + ' / 5 fields completed';
+  }
+  updateProgress();
+
+  // ── FIELD LABELS ──
+  const fieldMeta = [
+    { id: 'role',        heading: '# PERSONA / ROLE',        empty: '(not provided)' },
+    { id: 'context',     heading: '# CONTEXT',               empty: '(not provided)' },
+    { id: 'objectives',  heading: '# OBJECTIVE',             empty: '(not provided)' },
+    { id: 'audience',    heading: '# AUDIENCE',              empty: '(not provided)' },
+    { id: 'boundaries',  heading: '# BOUNDARIES & STYLE',    empty: '(not provided)' },
+  ];
+
+  // ── COLLECT ──
+  function buildText() {
+    return fieldMeta.map(f => {
+      const val = document.getElementById(f.id).value.trim() || f.empty;
+      return f.heading + '\n' + val;
+    }).join('\n\n');
+  }
+
+  function collectResponses() {
+    const text = buildText();
+    const highlighted = text.replace(/(# [A-Z &\/]+)/g, '<span class="out-heading">$1</span>');
+    document.getElementById('output-body').innerHTML = highlighted;
+    const section = document.getElementById('output-section');
+    section.style.display = 'block';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── COPY ──
+  function copyOutput() {
+    collectResponses();
+    const text = buildText();
+    navigator.clipboard.writeText(text).then(() => {
+      const status = document.getElementById('copy-status');
+      status.classList.add('visible');
+      setTimeout(() => status.classList.remove('visible'), 2500);
+    });
+  }
+
+  // ── CLEAR ──
+  function clearForm() {
+    if (confirm('Clear all fields? This cannot be undone.')) {
+      fieldIds.forEach(id => {
+        document.getElementById(id).value = '';
+        localStorage.removeItem('codesign_' + id);
+      });
+      document.getElementById('output-section').style.display = 'none';
+      updateProgress();
+    }
+  }
+</script>
+</body>
+</html>
