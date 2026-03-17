@@ -29,6 +29,7 @@ Decision rules:
 - TICK BOXES = multiple options may apply at once
 - FREE TEXT = too varied, too detailed, or too open-ended for a useful fixed list
 - Add “Other (specify)” only when a field is mostly structured but contains a few genuine outliers
+- Be conservative: only create a new field when it represents a distinct user decision that cannot be handled clearly as an option, tag, or free-text entry inside an existing field.
 - Prefer a small number of reusable fields over many niche fields
 - Create a maximum of 10 fields in total, unless the data makes fewer impossible
 - Do not create a structured field with fewer than 2 grounded options
