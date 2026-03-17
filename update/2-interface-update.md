@@ -1,5 +1,5 @@
 Use only the consolidated evidence below as the basis for your decisions.
-Do not return to the raw spreadsheet.
+Do not return to the raw initial list.
 Do not invent new categories.
 Do not add any field or option that cannot be traced back to the consolidated list.
 
