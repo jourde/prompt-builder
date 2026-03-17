@@ -4,170 +4,166 @@ I am going to give you a list of prompts collected from a group of educational s
 YOUR TASK
 ══════════════════════════════════
 
-Analyse all responses and turn them into an IMPLEMENTATION-READY INTERFACE SPECIFICATION for a prompt-building tool.
+Analyse all responses and produce a FINAL INTERFACE FIELD SCHEMA for a prompt-building tool.
 
-Your goal is NOT only to consolidate themes.
-Your goal is to tell me exactly:
-
-- which interface fields should exist
+Your job is to decide exactly:
+- which fields the interface should contain
 - under which of the four headings each field belongs
-- whether each field should be FREE TEXT, DROP-DOWN, or TICK BOXES
-- the exact items/options to include in each non-free-text field
-- the order in which the fields should appear in the interface
+- which input type each field should use
+- which exact options should appear in each structured field
+- which fields need “Other (specify)”
+- in which order the fields should appear
 
-Use these four headings as the top-level structure:
-
+Top-level headings:
 # PERSONA / ROLE
 # OBJECTIVE
 # AUDIENCE
 # BOUNDARIES & STYLE
 
 ══════════════════════════════════
-CORE PRINCIPLE
+WHAT YOU MUST PRODUCE
 ══════════════════════════════════
 
-You must distinguish clearly between:
+You are not producing a thematic summary.
+You are producing a BUILD-READY FORM STRUCTURE.
 
-- FIELD = one interface control the user interacts with
-- OPTION = one selectable item inside that field
+Distinguish clearly between:
 
-Important:
-A merged theme is NOT automatically a separate field.
-If several responses belong to the same user decision, group them into ONE field with multiple options.
+- FIELD = one interface control
+- OPTION = one selectable item inside a field
+
+Several similar responses may belong to one field.
 
 Example:
-Do NOT output:
-- Primary teacher → drop-down
-- TA → drop-down
-- SEN specialist → drop-down
+If responses include:
+- primary teacher
+- early years practitioner
+- TA
+- SEN specialist
 
-Instead output:
+Do NOT create four fields.
+Create one field such as:
+
 Field label: Role
 Input type: DROP-DOWN
 Options:
 - Primary / classroom teacher
 - Early years practitioner
-- SEN / inclusion specialist
 - TA / support staff
-- etc.
+- SEN / inclusion specialist
 
 ══════════════════════════════════
-ANALYSIS PROCESS
+DECISION RULES
 ══════════════════════════════════
 
-For each of the four headings, follow this process:
+1. MERGE SIMILAR RESPONSES
+Merge responses that express the same idea, even if wording differs.
 
-STEP 1 — MERGE
-Identify responses that express the same idea, even if worded differently.
-Merge them into one clear, neutral professional label.
+2. CREATE FIELDS, NOT THEMES
+Only create a new field when it represents a separate user choice.
 
-STEP 2 — DECIDE THE FIELD STRUCTURE
-Decide whether the merged ideas under that heading should become:
-- one single interface field
-- or several separate fields
-
-Create separate fields only when the user should reasonably answer them independently.
-
-Examples:
-- Under AUDIENCE, “age/phase” and “support needs” should usually be separate fields.
-- Under BOUNDARIES & STYLE, “tone”, “output format”, and “constraints” should usually be separate fields.
-
-STEP 3 — SPECIFY THE UI CONTROL
-For each field, choose exactly one:
+3. CHOOSE ONE INPUT TYPE PER FIELD
+Use only:
 - FREE TEXT
 - DROP-DOWN
 - TICK BOXES
 
-Use these rules:
-- Use DROP-DOWN when one option is usually selected and the set is reasonably stable.
-- Use TICK BOXES when multiple options may apply at the same time.
-- Use FREE TEXT when the responses are too varied, too detailed, or too open-ended for a fixed list.
-- If a field is mostly structured but contains a few rare one-off cases, keep the structured field and add:
-  - Other (specify)
+Rules:
+- DROP-DOWN = one option usually selected; stable list
+- TICK BOXES = several options may apply simultaneously
+- FREE TEXT = too varied, detailed, or open-ended for a useful fixed list
 
-STEP 4 — DEFINE THE EXACT OPTIONS
-For every DROP-DOWN or TICK BOXES field:
-- provide the exact option list
-- sort options by frequency, most frequent first
-- mark options that appeared only once with [unique]
-- mark options that are semantically unclear with [to clarify]
+4. USE “OTHER (SPECIFY)” SPARINGLY
+Add “Other (specify)” only when:
+- the field is mostly structured
+- but the spreadsheet contains a few genuine outliers that should not be lost
 
-STEP 5 — TRACEABILITY
-Every option or free-text field must trace back to at least one spreadsheet response.
-Do not invent categories that are not grounded in the data.
+Do not use “Other (specify)” as a lazy substitute for poor categorisation.
+
+5. SPLIT FIELDS WHEN NEEDED
+If one heading contains distinct kinds of information, split them into separate fields.
+
+Typical examples:
+- AUDIENCE may need separate fields such as:
+  - Age / phase
+  - Support needs
+  - Special context
+- BOUNDARIES & STYLE may need separate fields such as:
+  - Output format
+  - Tone
+  - Must include
+  - Must avoid
+  - Length / scale
+
+6. DO NOT INVENT CATEGORIES
+Every field and every option must trace back to at least one spreadsheet response.
+
+7. OPTIMISE FOR A REAL INTERFACE
+Prefer a small number of clear reusable fields over a long list of niche fields.
+Do not create a separate field when an item should simply be an option inside an existing field.
+
+8. LIMIT FIELD PROLIFERATION
+Create a maximum of 10 fields in total, unless the data makes fewer impossible.
+
+9. AVOID THIN STRUCTURED FIELDS
+Do not create a structured field with fewer than 2 grounded options.
+If a possible field has only 1 grounded option, make it FREE TEXT instead or absorb it into a broader existing field.
 
 ══════════════════════════════════
-OUTPUT FORMAT
+REQUIRED OUTPUT FORMAT
 ══════════════════════════════════
 
-For each heading, produce BOTH outputs below.
+Produce only the following sections.
 
-A) INTERFACE BLUEPRINT
+# FINAL FIELD SCHEMA
 
-Create a table with these columns:
+Create one table for the whole interface with these columns:
 
-| Order | Field label | Input type | Single-select or multi-select | Exact options/items | Include “Other (specify)” | Reason |
+| Global order | Heading | Field label | Input type | Single-select or multi-select | Exact options/items | Include “Other (specify)” | Required or optional | Reason |
 
 Rules:
-- “Order” means the position of the field within that heading.
-- For FREE TEXT fields, write “—” in the “Exact options/items” column.
-- For DROP-DOWN, use “single-select”.
-- For TICK BOXES, use “multi-select”.
-- In the “Reason” column, explain briefly why this control type is the best fit.
+- “Global order” = the position of the field in the full interface from top to bottom
+- For DROP-DOWN, write “single-select”
+- For TICK BOXES, write “multi-select”
+- For FREE TEXT, write “—” in the “Single-select or multi-select” column
+- For FREE TEXT, write “—” in the “Exact options/items” column
+- In “Exact options/items”, list the exact option labels in display order
+- Sort options by frequency, most frequent first
+- Mark one-off options with [unique]
+- Mark unclear options with [to clarify]
+- “Required or optional” must be explicitly decided for every field
 
-B) CONSOLIDATED EVIDENCE LIST
+# FIELD-BY-FIELD NOTES
 
-After the table, provide a numbered list of the merged items that informed the interface design.
+After the table, give a numbered list.
+For each field, provide:
+1. why it should exist
+2. why the chosen control type is appropriate
+3. whether the field should be kept structured or left open
+4. any ambiguity that should be validated before implementation
+
 Format:
-1. Item label (×frequency)
-2. Item label (×frequency) [unique]
-3. Item label (×frequency) [to clarify]
+1. Field label
+   - Purpose:
+   - Why this control type:
+   - Structure note:
+   - Validation note:
 
-Important:
-This evidence list is for traceability.
-It does NOT need to mirror the exact interface structure one-to-one.
+# EXCLUDED OR UNCLASSIFIED RESPONSES
 
-══════════════════════════════════
-GLOBAL OUTPUT AFTER ALL FOUR HEADINGS
-══════════════════════════════════
-
-After the four headings, add two final sections:
-
-# PROPOSED FULL INTERFACE ORDER
-
-Give one single ordered list showing the complete interface from top to bottom across all headings.
-Example format:
-1. Role — DROP-DOWN
-2. Objective — DROP-DOWN
-3. Age / phase — DROP-DOWN
-4. Support needs — TICK BOXES
-5. Output format — DROP-DOWN
-6. Tone — TICK BOXES
-7. Must include — FREE TEXT
-8. Must avoid — FREE TEXT
-
-# DESIGN NOTES
-
-Provide short implementation notes covering:
-- where a structured field is sufficient
-- where “Other (specify)” is necessary
-- where FREE TEXT is unavoidable
-- any fields that should be split because they combine different kinds of information
-- any ambiguous categories that should be validated with users before building the interface
-
-# UNCLASSIFIED
-
-Do not discard any response without explanation.
-If a response does not fit under any of the four headings, place it here and explain briefly why.
+If any response does not fit into the final schema, list it here and explain why.
+Do not discard anything silently.
 
 ══════════════════════════════════
 IMPORTANT CONSTRAINTS
 ══════════════════════════════════
 
-- Do not invent items.
-- Do not discard rare items; include them either as options, “Other (specify)”, or in UNCLASSIFIED.
-- Preserve professional terminology used by respondents where possible.
-- Standardise wording, but do not over-generalise.
-- If the spreadsheet contains more than one language, work from meaning, not wording.
+- Do not produce a separate “consolidated list” section.
+- Do not produce generic recommendations.
+- Do not describe possibilities; make decisions.
+- Do not say that something “could be” a drop-down or “might be” tick boxes.
+- Decide one final interface structure.
+- Keep wording professional, concise, and implementation-ready.
+- Preserve respondent terminology where possible.
+- Work from meaning, not wording, if multiple languages appear.
 - Produce all output in English.
-- Optimise for actual interface design, not only thematic analysis.
