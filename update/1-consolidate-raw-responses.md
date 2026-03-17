@@ -1,4 +1,4 @@
-I am going to give you a spreadsheet containing prompts collected from a group of educational support coordinators in European Schools. They were asked to describe their professional needs in order to adapt a prompt-building tool to their work.
+I am going to give you a list containing prompts collected from a group of educational support coordinators in European Schools. They were asked to describe their professional needs in order to adapt a prompt-building tool to their work.
 
 Your task is to consolidate the raw responses only.
 
