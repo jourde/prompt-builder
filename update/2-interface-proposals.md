@@ -41,9 +41,19 @@ Required output:
 
 # FINAL FIELD SCHEMA
 
-Create one table for the whole interface with these columns:
-
-| Global order | Heading | Field label | Input type | Single-select or multi-select | Exact options/items | Include “Other (specify)” | Required or optional | Reason |
+Create one list for the whole interface with these elements:
+- Global order
+  - Heading
+  - Field label
+  - Input type
+  - Single-select or multi-select
+  - Exact options/items
+    - item 1
+    - item 2
+    - etc.
+  - Include “Other (specify)”
+  - Required or optional
+  - Reason
 
 Rules:
 - For DROP-DOWN, write “single-select”
@@ -77,3 +87,4 @@ List any consolidated items not included in the schema and explain exactly why t
 
 Consolidated evidence:
 [PASTE THE OUTPUT OF PROMPT 1 HERE]
+
