@@ -1,4 +1,4 @@
-I am going to give you a spreadsheet containing responses collected from a group of 
+I am going to give you a list of prompts collected from a group of 
 educational support coordinators in European Schools. They were asked to describe their 
 professional needs in order to adapt a prompt-building tool to their work.
 
