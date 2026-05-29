@@ -118,7 +118,7 @@
             font-size: 0.75rem; font-weight: 600; font-family: inherit;
             transition: 0.2s; letter-spacing: 0.3px;
             /* Always visible for keyboard users; subtler visually at rest */
-            opacity: 0.55;
+            opacity: 0.8;
         }
         /* Show fully on hover OR focus (keyboard nav) */
         .input-container:hover .fullscreen-btn,
@@ -253,13 +253,13 @@
 
         /* Footer */
         .app-footer {
-            background: var(--primary); color: rgba(255,255,255,0.6);
+            background: var(--primary); color: rgba(255,255,255,0.85);
             padding: 8px 2.5rem; display: flex; justify-content: flex-end; align-items: center;
             font-size: 0.75rem;
         }
         .footer-legal-btn {
             background: none; border: none; cursor: pointer;
-            color: rgba(255,255,255,0.6); font-size: 0.75rem; font-family: inherit;
+            color: rgba(255,255,255,0.85); font-size: 0.75rem; font-family: inherit;
             padding: 4px 8px; border-radius: 4px; transition: 0.2s;
             text-decoration: underline; text-underline-offset: 2px;
         }
@@ -305,6 +305,17 @@
         @media (max-width: 900px) {
             .main-content { flex-direction: column; overflow-y: auto; }
             .editor-panel, .preview-panel { min-height: 600px; }
+        }
+
+        /* Respect users who prefer reduced motion (WCAG 2.3.3) */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+                scroll-behavior: auto !important;
+            }
+            .btn:hover, .btn-reset:hover, .fullscreen-btn:hover, .fs-exit-btn:hover { transform: none !important; }
         }
     </style>
 </head>
@@ -480,8 +491,8 @@
                 <span id="save-status" aria-live="polite" aria-atomic="true">Saved</span>
             </div>
             <div class="panel-scroll" style="background-color: #fcfcfc;">
-                <div id="preview-body" class="preview-body" role="region" aria-label="Generated prompt" aria-live="polite" aria-atomic="true"></div>
-                <div id="prompt-stats" class="prompt-stats" aria-live="polite" aria-atomic="true"></div>
+                <div id="preview-body" class="preview-body" role="region" aria-label="Generated prompt" tabindex="0"></div>
+                <div id="prompt-stats" class="prompt-stats"></div>
             </div>
             <div class="actions">
                 <button class="btn btn-copy" onclick="copyToClipboard()" title="Copy to Clipboard (Ctrl+Shift+C / ⌘⇧C)"
@@ -712,6 +723,7 @@
             const exitBtn = document.getElementById('fs-exit-btn');
             if (exitBtn) exitBtn.remove();
             el.onkeydown = null;
+            el.focus(); // return focus to the field so keyboard focus is not lost
             announce('Returned to normal view.');
         }
     }
@@ -741,13 +753,41 @@
 
     function copyToClipboard() {
         const text = document.getElementById('preview-body').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector('.btn-copy');
-            const originalText = btn.innerText;
+        const btn = document.querySelector('.btn-copy');
+        const originalText = btn.innerText;
+        const showCopied = () => {
             btn.innerText = "✓ Copied!";
             announce('Prompt copied to clipboard.');
             setTimeout(() => btn.innerText = originalText, 2000);
-        });
+        };
+        const showFailed = () => {
+            announce('Copy failed. Please select the prompt text and copy it manually.');
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(showCopied)
+                .catch(() => { if (fallbackCopy(text)) showCopied(); else showFailed(); });
+        } else {
+            if (fallbackCopy(text)) showCopied(); else showFailed();
+        }
+    }
+
+    // Fallback for contexts where the async Clipboard API is unavailable (e.g. some file:// pages)
+    function fallbackCopy(text) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'absolute';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return ok;
+        } catch (e) {
+            return false;
+        }
     }
 
     function downloadPrompt() {
@@ -757,7 +797,11 @@
         const a = document.createElement('a');
         a.href = url;
         a.download = `prompt_${new Date().toISOString().split('T')[0]}.md`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        announce('Prompt exported as a Markdown file.');
     }
 
     function openLegal() {
