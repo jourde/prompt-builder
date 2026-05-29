@@ -12,12 +12,15 @@ Start with a rough **Initial Request** (no need to be precise), then refine it u
 - Outline the **Steps / Process** the response should follow
 - Optionally include an **Example**
 
-All fields are optional — fill only what's useful, and hide the ones you don't need. The result is a clean, consolidated master prompt ready to copy or export.
+All fields are optional — fill only what's useful, and hide the ones you don't need. You can also enable **Optional refinements** — plain-language behaviours appended to the prompt (ask clarifying questions first, explain reasoning, flag uncertainty, offer alternatives). The result is a clean, consolidated master prompt ready to copy or export.
 
 ## Key Features
 
 ### Structured Prompt Framework
 Segmented input fields guide users through best-practice prompt design. Each section can be shown or hidden from the final output using the eye toggle. An Initial Request field at the top serves as a reference for your raw idea and is not included in the generated prompt.
+
+### Optional Refinements
+A set of plain-language checkboxes lets you append common behaviours to the prompt without technical jargon — ask clarifying questions first, explain reasoning, flag uncertainty, or offer alternatives. Selected refinements appear under an **Additional Instructions** heading in the generated prompt.
 
 ### Live Master Prompt Preview
 - Real-time rendering of the consolidated prompt  
