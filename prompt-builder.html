@@ -228,19 +228,6 @@
             margin-top: 10px; font-family: 'Fira Code', monospace;
         }
 
-        /* Draft reference block in preview */
-        .draft-ref {
-            background: #f8f9fa; border: 1px solid #e8ecef; border-radius: 6px;
-            padding: 12px 16px; margin-bottom: 18px;
-            font-style: italic; font-size: 0.9rem; color: #546e7a; /* WCAG AA on #f8f9fa */
-            font-family: 'Fira Code', monospace; white-space: pre-wrap; line-height: 1.5;
-        }
-        .draft-ref-label {
-            display: block; font-style: normal; font-weight: 700; font-size: 0.72rem;
-            text-transform: uppercase; letter-spacing: 0.5px; color: #546e7a;
-            margin-bottom: 6px; font-family: 'Roboto', sans-serif;
-        }
-
 .example-toggle-btn {
             width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--border);
             background: transparent; color: var(--text-secondary); cursor: pointer;
@@ -579,22 +566,19 @@
     const fields = ['draft', 'persona', 'context', 'objective', 'audience', 'boundaries', 'steps', 'example'];
 
     // Field order for the generated prompt (labels/headings come from I18N)
-    const HIDEABLE_FIELDS = [
-        { id: 'persona' },
-        { id: 'context' },
-        { id: 'objective' },
-        { id: 'audience' },
-        { id: 'boundaries' },
-        { id: 'steps' },
-    ];
+    const HIDEABLE_FIELDS = ['persona', 'context', 'objective', 'audience', 'boundaries', 'steps'];
 
     // Refinement order (labels + prompt sentences come from I18N)
-    const REFINEMENTS = [
-        { id: 'clarify' },
-        { id: 'reasoning' },
-        { id: 'uncertainty' },
-        { id: 'alternatives' },
-    ];
+    const REFINEMENTS = ['clarify', 'reasoning', 'uncertainty', 'alternatives'];
+
+    // Persistence helper. The 'igec_en_' prefix is kept verbatim for backward
+    // compatibility with data already saved in users' browsers (it is not language-specific).
+    const STORE_PREFIX = 'igec_en_';
+    const store = {
+        get:    (key) => localStorage.getItem(STORE_PREFIX + key),
+        set:    (key, value) => localStorage.setItem(STORE_PREFIX + key, value),
+        remove: (key) => localStorage.removeItem(STORE_PREFIX + key),
+    };
 
     // ---- Internationalisation (i18n) ----------------------------------------
     const I18N = {
@@ -793,7 +777,7 @@
         });
 
         // Hide/show buttons reflect current state with localized labels
-        HIDEABLE_FIELDS.forEach(({ id }) => applyHiddenState(id, hiddenFields.has(id)));
+        HIDEABLE_FIELDS.forEach(id => applyHiddenState(id, hiddenFields.has(id)));
 
         // Example toggle reflects current visibility
         const exBtn = document.getElementById('example-toggle-btn');
@@ -820,6 +804,7 @@
     }
 
     const hiddenFields = new Set();
+    let saveTimer; // debounce handle for the save-status indicator
 
     window.onload = () => {
         // Resolve language: stored preference, else browser language, else English
@@ -829,7 +814,7 @@
             : ((navigator.language || '').toLowerCase().startsWith('fr') ? 'fr' : 'en');
 
         fields.forEach(id => {
-            const saved = localStorage.getItem('igec_en_' + id);
+            const saved = store.get(id);
             if (saved) document.getElementById(id).value = saved;
 
             document.getElementById(id).addEventListener('input', () => {
@@ -846,20 +831,20 @@
         });
 
         // Restore hidden field state (labels applied later by applyLanguage)
-        HIDEABLE_FIELDS.forEach(({ id }) => {
-            if (localStorage.getItem('igec_en_' + id + '_hidden') === 'true') {
+        HIDEABLE_FIELDS.forEach(id => {
+            if (store.get(id + '_hidden') === 'true') {
                 hiddenFields.add(id);
             }
         });
 
         // Restore example visibility (button label applied by applyLanguage)
-        if (localStorage.getItem('igec_en_example_visible') === 'true') {
+        if (store.get('example_visible') === 'true') {
             document.getElementById('example-container').style.display = 'block';
         }
 
         // Restore optional refinements
-        REFINEMENTS.forEach(({ id }) => {
-            if (localStorage.getItem('igec_en_ref_' + id) === 'true') {
+        REFINEMENTS.forEach(id => {
+            if (store.get('ref_' + id) === 'true') {
                 document.getElementById('ref-' + id).checked = true;
             }
         });
@@ -879,7 +864,7 @@
     function toggleHide(id) {
         const isNowHidden = !hiddenFields.has(id);
         isNowHidden ? hiddenFields.add(id) : hiddenFields.delete(id);
-        localStorage.setItem('igec_en_' + id + '_hidden', isNowHidden ? 'true' : 'false');
+        store.set(id + '_hidden', isNowHidden ? 'true' : 'false');
         applyHiddenState(id, isNowHidden);
         updatePreview();
         const label = t().fields[id].label;
@@ -888,7 +873,7 @@
 
     function onRefinementChange(id) {
         const checked = document.getElementById('ref-' + id).checked;
-        localStorage.setItem('igec_en_ref_' + id, checked ? 'true' : 'false');
+        store.set('ref_' + id, checked ? 'true' : 'false');
         updatePreview();
         announce(checked ? t().refAdded : t().refRemoved);
     }
@@ -896,8 +881,8 @@
     function updatePreview() {
         const dict = t();
         const segments = HIDEABLE_FIELDS
-            .filter(({ id }) => !hiddenFields.has(id))
-            .map(({ id }) => {
+            .filter(id => !hiddenFields.has(id))
+            .map(id => {
                 const heading = dict.fields[id].heading;
                 const val = document.getElementById(id).value || fmt(dict.notDefined, { f: heading.slice(2) });
                 return heading + '\n' + val;
@@ -911,8 +896,8 @@
         }
 
         const refinements = REFINEMENTS
-            .filter(({ id }) => document.getElementById('ref-' + id).checked)
-            .map(({ id }) => '- ' + dict.refTexts[id]);
+            .filter(id => document.getElementById('ref-' + id).checked)
+            .map(id => '- ' + dict.refTexts[id]);
         if (refinements.length) {
             segments.push(dict.additionalInstructions + '\n' + refinements.join('\n'));
         }
@@ -935,13 +920,13 @@
     }
 
     function saveLocal(id) {
-        localStorage.setItem('igec_en_' + id, document.getElementById(id).value);
+        store.set(id, document.getElementById(id).value);
         const status = document.getElementById('save-status');
         status.innerText = t().syncing;
         status.style.color = "#f57c00"; /* darkened amber for contrast on #fafafa */
 
-        clearTimeout(window.saveTimer);
-        window.saveTimer = setTimeout(() => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
             status.innerText = t().savedToBrowser;
             status.style.color = "#2e7d32"; /* darkened green for WCAG AA */
         }, 1000);
@@ -988,12 +973,12 @@
         if (isVisible) {
             container.style.display = 'none';
             setExampleBtnLabel(btn, false);
-            localStorage.setItem('igec_en_example_visible', 'false');
+            store.set('example_visible', 'false');
             announce(t().exampleHidden);
         } else {
             container.style.display = 'block';
             setExampleBtnLabel(btn, true);
-            localStorage.setItem('igec_en_example_visible', 'true');
+            store.set('example_visible', 'true');
             document.getElementById('example').focus();
             announce(t().exampleShown);
         }
@@ -1089,19 +1074,19 @@
         if(confirm(t().resetConfirm)) {
             fields.forEach(id => {
                 document.getElementById(id).value = '';
-                localStorage.removeItem('igec_en_' + id);
+                store.remove(id);
             });
-            HIDEABLE_FIELDS.forEach(({ id }) => {
+            HIDEABLE_FIELDS.forEach(id => {
                 hiddenFields.delete(id);
-                localStorage.removeItem('igec_en_' + id + '_hidden');
+                store.remove(id + '_hidden');
                 applyHiddenState(id, false);
             });
             document.getElementById('example-container').style.display = 'none';
             setExampleBtnLabel(document.getElementById('example-toggle-btn'), false);
-            localStorage.removeItem('igec_en_example_visible');
-            REFINEMENTS.forEach(({ id }) => {
+            store.remove('example_visible');
+            REFINEMENTS.forEach(id => {
                 document.getElementById('ref-' + id).checked = false;
-                localStorage.removeItem('igec_en_ref_' + id);
+                store.remove('ref_' + id);
             });
             updatePreview();
         }
