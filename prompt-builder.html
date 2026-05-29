@@ -102,6 +102,14 @@
 
         .lazy-prompt { background-color: #fdfdfd; border: 1px dashed var(--border); }
 
+        .reference-block {
+            background-color: #f0f4f8;
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 16px 16px 4px 16px;
+            margin-bottom: 28px;
+        }
+
         /* Fullscreen Mode */
         .fullscreen-btn {
             position: absolute; bottom: 10px; right: 10px; z-index: 10;
@@ -187,10 +195,10 @@
 
         .btn-copy { background: var(--primary); color: white; }
         .btn-download { background: #546e7a; color: white; }
-        .btn-reset { background: transparent; color: #b0bec5; border: 1px solid #cfd8dc; flex: 0.4; }
+        .btn-reset { background: transparent; color: #ef9a9a; border: 1px solid #ef9a9a; flex: 0.4; }
 
         .btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
-        .btn-reset:hover { border-color: #90a4ae; color: #607d8b; }
+        .btn-reset:hover { background: rgba(239,154,154,0.15); border-color: #e57373; color: #e57373; filter: none; transform: translateY(-1px); }
 
         #save-status { font-weight: 400; text-transform: none; color: #2e7d32; font-size: 0.75rem; } /* darkened green for WCAG AA on #fafafa */
 
@@ -291,9 +299,12 @@
     <header role="banner">
         <div>
             <h1 style="margin:0; font-size: 1.5rem; letter-spacing: -0.5px;">Simple Prompt Builder</h1>
-            <span style="font-size: 0.85rem; opacity: 0.9;">Structure your thinking. Shape the output.</span>
+            <span style="font-size: 0.85rem; opacity: 0.9;">Structure your thinking. Shape the output.<br><em>Prompting is an intellectual process, more than a technical one.</em></span>
         </div>
-        <button class="btn btn-reset" onclick="resetForm()">Clear Data</button>
+        <button class="btn btn-reset" onclick="resetForm()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Clear Data
+        </button>
     </header>
 
     <!-- aria-live region for status announcements (WCAG 4.1.3) -->
@@ -302,10 +313,11 @@
     <main id="main-content" class="main-content">
         <section class="editor-panel" aria-label="Prompt input builder">
             <div class="panel-header" aria-hidden="true">Input Builder</div>
+            <p style="margin: 0 0 0 0; padding: 10px 20px 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">All fields are optional — fill only what's useful, and hide the ones you don't need.</p>
             <div class="panel-scroll">
-                <div class="input-container">
+                <div class="input-container reference-block">
                     <label for="draft">Initial Request (for reference)</label>
-                    <span id="hint-draft" class="hint">Your raw idea. Example: "Write a report on school safety."</span>
+                    <span id="hint-draft" class="hint">No need to be precise — a rough idea is enough. The fields below will help you refine it. Example: "Write a report on school safety."</span>
                     <textarea id="draft" class="lazy-prompt" placeholder="Type or paste your initial idea here..."
                         aria-describedby="hint-draft"></textarea>
                 </div>
@@ -392,6 +404,22 @@
                     <button class="fullscreen-btn" onclick="toggleFS('boundaries')" aria-label="Expand Boundaries & Style to fullscreen">⛶ Fullscreen</button>
                 </div>
 
+                <div class="input-container" id="container-steps">
+                    <div class="field-header">
+                        <label for="steps"># STEPS / PROCESS</label>
+                        <button class="hide-toggle-btn" id="hide-btn-steps" aria-pressed="false"
+                            aria-label="Hide Steps / Process from prompt"
+                            onclick="toggleHide('steps', 'Steps / Process')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-steps" class="hint">The sequential steps the response should follow (e.g., 1. Summarise the situation. 2. Identify key issues. 3. Propose solutions.).</span>
+                    <textarea id="steps" placeholder="Step 1: ..."
+                        aria-describedby="hint-steps"></textarea>
+                    <button class="fullscreen-btn" onclick="toggleFS('steps')" aria-label="Expand Steps / Process to fullscreen">⛶ Fullscreen</button>
+                </div>
+
                 <hr aria-hidden="true">
 
                 <div class="input-container" id="example-container" style="display:none;">
@@ -475,7 +503,7 @@
 </div>
 
 <script>
-    const fields = ['draft', 'persona', 'context', 'objective', 'audience', 'boundaries', 'example'];
+    const fields = ['draft', 'persona', 'context', 'objective', 'audience', 'boundaries', 'steps', 'example'];
 
     const HIDEABLE_FIELDS = [
         { id: 'persona',    label: 'Persona/Role',      heading: '# PERSONA/ROLE' },
@@ -483,6 +511,7 @@
         { id: 'objective',  label: 'Objective',          heading: '# OBJECTIVE' },
         { id: 'audience',   label: 'Audience',           heading: '# AUDIENCE' },
         { id: 'boundaries', label: 'Boundaries & Style', heading: '# BOUNDARIES & STYLE' },
+        { id: 'steps',      label: 'Steps / Process',   heading: '# STEPS / PROCESS' },
     ];
     const hiddenFields = new Set();
     
