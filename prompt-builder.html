@@ -233,6 +233,24 @@
         .example-toggle-btn.active { border-color: #b0bec5; color: #b0bec5; }
         .example-toggle-btn.active:hover { border-color: #e57373; color: #e57373; background: #fff5f5; }
 
+        /* Optional refinements */
+        .refinements {
+            margin-top: 18px; padding: 14px 16px;
+            border: 1px solid var(--border); border-radius: 10px; background: #f8fafb;
+        }
+        .refinements-title {
+            font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);
+            margin-bottom: 8px; display: block;
+        }
+        .refinement-option {
+            display: flex; align-items: flex-start; gap: 8px;
+            font-size: 0.85rem; color: var(--text-main); cursor: pointer;
+            padding: 5px 0; line-height: 1.35;
+        }
+        .refinement-option input {
+            margin-top: 2px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0;
+        }
+
         /* Footer */
         .app-footer {
             background: var(--primary); color: rgba(255,255,255,0.6);
@@ -433,6 +451,26 @@
                     aria-expanded="false" aria-controls="example-container">
                     + Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>
                 </button>
+
+                <fieldset class="refinements">
+                    <legend class="refinements-title">Optional refinements <span style="font-weight:400;">— behaviours to add to the response</span></legend>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-clarify" onchange="onRefinementChange('clarify')">
+                        Ask me clarifying questions first
+                    </label>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-reasoning" onchange="onRefinementChange('reasoning')">
+                        Explain your reasoning
+                    </label>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-uncertainty" onchange="onRefinementChange('uncertainty')">
+                        Flag any uncertainty
+                    </label>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-alternatives" onchange="onRefinementChange('alternatives')">
+                        Offer alternatives
+                    </label>
+                </fieldset>
             </div>
         </section>
 
@@ -513,6 +551,14 @@
         { id: 'boundaries', label: 'Boundaries & Style', heading: '# BOUNDARIES & STYLE' },
         { id: 'steps',      label: 'Steps / Process',   heading: '# STEPS / PROCESS' },
     ];
+
+    const REFINEMENTS = [
+        { id: 'clarify',      text: 'Before answering, ask me any clarifying questions you need.' },
+        { id: 'reasoning',    text: 'Explain the reasoning behind your answer.' },
+        { id: 'uncertainty',  text: 'Tell me where you are unsure or where information may be unreliable.' },
+        { id: 'alternatives', text: 'Where relevant, propose a few different options.' },
+    ];
+
     const hiddenFields = new Set();
     
     window.onload = () => {
@@ -549,6 +595,13 @@
             btn.classList.add('active');
             btn.setAttribute('aria-expanded', 'true');
         }
+
+        // Restore optional refinements
+        REFINEMENTS.forEach(({ id }) => {
+            if (localStorage.getItem('igec_en_ref_' + id) === 'true') {
+                document.getElementById('ref-' + id).checked = true;
+            }
+        });
         updatePreview();
     };
 
@@ -571,6 +624,13 @@
         announce(isNowHidden ? label + ' hidden from prompt.' : label + ' included in prompt.');
     }
 
+    function onRefinementChange(id) {
+        const checked = document.getElementById('ref-' + id).checked;
+        localStorage.setItem('igec_en_ref_' + id, checked ? 'true' : 'false');
+        updatePreview();
+        announce(checked ? 'Refinement added to prompt.' : 'Refinement removed from prompt.');
+    }
+
     function updatePreview() {
         const segments = HIDEABLE_FIELDS
             .filter(({ id }) => !hiddenFields.has(id))
@@ -584,6 +644,13 @@
         if (exampleVisible) {
             const e = document.getElementById('example').value || '(EXAMPLE not defined)';
             segments.push('# EXAMPLE\n' + e);
+        }
+
+        const refinements = REFINEMENTS
+            .filter(({ id }) => document.getElementById('ref-' + id).checked)
+            .map(({ text }) => '- ' + text);
+        if (refinements.length) {
+            segments.push('# ADDITIONAL INSTRUCTIONS\n' + refinements.join('\n'));
         }
 
         const template = segments.join('\n\n');
@@ -742,6 +809,10 @@
             btn.innerHTML = '+ Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>';
             btn.classList.remove('active');
             localStorage.removeItem('igec_en_example_visible');
+            REFINEMENTS.forEach(({ id }) => {
+                document.getElementById('ref-' + id).checked = false;
+                localStorage.removeItem('igec_en_ref_' + id);
+            });
             updatePreview();
         }
     }
