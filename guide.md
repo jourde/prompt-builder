@@ -1,20 +1,23 @@
 ## Purpose
 
-Many AI outputs fail due to vague or poorly structured instructions. This tool enforces a clear framework so you can:
+Many AI outputs fail due to vague or poorly structured instructions. This tool guides you through a clear framework — prompting is an intellectual process, more than a technical one.
+
+Start with a rough **Initial Request** (no need to be precise), then refine it using the structured fields:
 
 - Define a **Persona/Role**
 - Provide relevant **Context**
 - State a precise **Objective**
 - Identify the **Audience**
 - Specify **Boundaries & Style**
+- Outline the **Steps / Process** the response should follow
 - Optionally include an **Example**
 
-The result is a clean, consolidated master prompt ready to copy or export.
+All fields are optional — fill only what's useful, and hide the ones you don't need. The result is a clean, consolidated master prompt ready to copy or export.
 
 ## Key Features
 
 ### Structured Prompt Framework
-Segmented input fields guide users through best-practice prompt design. Each section can be included or excluded from the final output.
+Segmented input fields guide users through best-practice prompt design. Each section can be shown or hidden from the final output using the eye toggle. An Initial Request field at the top serves as a reference for your raw idea and is not included in the generated prompt.
 
 ### Live Master Prompt Preview
 - Real-time rendering of the consolidated prompt  
@@ -40,7 +43,7 @@ Segmented input fields guide users through best-practice prompt design. Each sec
 - Copy to clipboard (keyboard shortcut supported)  
 - Export as Markdown (`.md`)  
 - Optional Example section toggle  
-- Clear/reset function  
+- Clear/reset function with visual warning indicator  
 
 ## How It Works
 
