@@ -172,6 +172,17 @@
         /* Override label margin when inside flex field-header */
         .field-header label { margin-bottom: 0; }
 
+        /* Drag-and-drop field reordering */
+        .drag-handle {
+            cursor: grab; color: var(--text-secondary); opacity: 0.4;
+            padding: 2px 4px; border-radius: 3px; user-select: none;
+            display: inline-flex; align-items: center; flex-shrink: 0;
+        }
+        .drag-handle:hover { opacity: 1; color: var(--primary); background: #eceff1; }
+        .drag-handle:active { cursor: grabbing; }
+        .input-container.dragging { opacity: 0.3; }
+        .input-container.drag-over { box-shadow: 0 -3px 0 0 var(--primary); }
+
         textarea.fullscreen-active {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             z-index: 9999; border-radius: 0; padding: 50px; font-size: 1.25rem;
@@ -366,7 +377,10 @@
 
                 <div class="input-container" id="container-persona">
                     <div class="field-header">
-                        <label for="persona" data-i18n="fields.persona.heading"># PERSONA/ROLE</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="persona" data-i18n="fields.persona.heading"># PERSONA/ROLE</label>
+                        </div>
                         <button class="hide-toggle-btn" id="hide-btn-persona" aria-pressed="false"
                             aria-label="Hide Persona/Role from prompt"
                             onclick="toggleHide('persona')">
@@ -382,7 +396,10 @@
 
                 <div class="input-container" id="container-context">
                     <div class="field-header">
-                        <label for="context" data-i18n="fields.context.heading"># CONTEXT</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="context" data-i18n="fields.context.heading"># CONTEXT</label>
+                        </div>
                         <button class="hide-toggle-btn" id="hide-btn-context" aria-pressed="false"
                             aria-label="Hide Context from prompt"
                             onclick="toggleHide('context')">
@@ -398,7 +415,10 @@
 
                 <div class="input-container" id="container-objective">
                     <div class="field-header">
-                        <label for="objective" data-i18n="fields.objective.heading"># OBJECTIVE</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="objective" data-i18n="fields.objective.heading"># OBJECTIVE</label>
+                        </div>
                         <button class="hide-toggle-btn" id="hide-btn-objective" aria-pressed="false"
                             aria-label="Hide Objective from prompt"
                             onclick="toggleHide('objective')">
@@ -414,7 +434,10 @@
 
                 <div class="input-container" id="container-audience">
                     <div class="field-header">
-                        <label for="audience" data-i18n="fields.audience.heading"># AUDIENCE</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="audience" data-i18n="fields.audience.heading"># AUDIENCE</label>
+                        </div>
                         <button class="hide-toggle-btn" id="hide-btn-audience" aria-pressed="false"
                             aria-label="Hide Audience from prompt"
                             onclick="toggleHide('audience')">
@@ -430,7 +453,10 @@
 
                 <div class="input-container" id="container-boundaries">
                     <div class="field-header">
-                        <label for="boundaries" data-i18n="fields.boundaries.heading"># BOUNDARIES & STYLE</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="boundaries" data-i18n="fields.boundaries.heading"># BOUNDARIES & STYLE</label>
+                        </div>
                         <button class="hide-toggle-btn" id="hide-btn-boundaries" aria-pressed="false"
                             aria-label="Hide Boundaries &amp; Style from prompt"
                             onclick="toggleHide('boundaries')">
@@ -446,7 +472,10 @@
 
                 <div class="input-container" id="container-steps">
                     <div class="field-header">
-                        <label for="steps" data-i18n="fields.steps.heading"># STEPS / PROCESS</label>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="steps" data-i18n="fields.steps.heading"># STEPS / PROCESS</label>
+                        </div>
                         <button class="hide-toggle-btn" id="hide-btn-steps" aria-pressed="false"
                             aria-label="Hide Steps / Process from prompt"
                             onclick="toggleHide('steps')">
@@ -567,6 +596,7 @@
 
     // Field order for the generated prompt (labels/headings come from I18N)
     const HIDEABLE_FIELDS = ['persona', 'context', 'objective', 'audience', 'boundaries', 'steps'];
+    let fieldOrder = [...HIDEABLE_FIELDS]; // mutable; updated by drag-and-drop
 
     // Refinement order (labels + prompt sentences come from I18N)
     const REFINEMENTS = ['clarify', 'reasoning', 'uncertainty', 'alternatives'];
@@ -849,6 +879,18 @@
             }
         });
 
+        // Restore field order
+        const savedOrder = store.get('field_order');
+        if (savedOrder) {
+            const parsed = savedOrder.split(',').filter(id => HIDEABLE_FIELDS.includes(id));
+            if (parsed.length === HIDEABLE_FIELDS.length) {
+                fieldOrder = parsed;
+                const orderParent = document.getElementById('container-persona').parentNode;
+                fieldOrder.forEach(id => orderParent.appendChild(document.getElementById('container-' + id)));
+            }
+        }
+        initDragAndDrop();
+
         applyLanguage(); // sets all text + composed labels, then calls updatePreview()
     };
 
@@ -880,7 +922,7 @@
 
     function updatePreview() {
         const dict = t();
-        const segments = HIDEABLE_FIELDS
+        const segments = fieldOrder
             .filter(id => !hiddenFields.has(id))
             .map(id => {
                 const heading = dict.fields[id].heading;
@@ -1070,6 +1112,65 @@
         if (e.target.id === 'legal-modal') closeLegal();
     });
 
+    function initDragAndDrop() {
+        let draggedId = null;
+
+        HIDEABLE_FIELDS.forEach(id => {
+            const container = document.getElementById('container-' + id);
+            const handle = container.querySelector('.drag-handle');
+            handle.setAttribute('draggable', 'true');
+
+            handle.addEventListener('dragstart', e => {
+                draggedId = id;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', id);
+                e.dataTransfer.setDragImage(container, 20, 20);
+                requestAnimationFrame(() => container.classList.add('dragging'));
+            });
+
+            handle.addEventListener('dragend', () => {
+                container.classList.remove('dragging');
+                document.querySelectorAll('.input-container.drag-over')
+                    .forEach(el => el.classList.remove('drag-over'));
+                draggedId = null;
+            });
+
+            container.addEventListener('dragover', e => {
+                if (!draggedId || draggedId === id) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                document.querySelectorAll('.input-container.drag-over')
+                    .forEach(el => el.classList.remove('drag-over'));
+                container.classList.add('drag-over');
+            });
+
+            container.addEventListener('dragleave', e => {
+                if (!container.contains(e.relatedTarget)) {
+                    container.classList.remove('drag-over');
+                }
+            });
+
+            container.addEventListener('drop', e => {
+                e.preventDefault();
+                container.classList.remove('drag-over');
+                if (!draggedId || draggedId === id) return;
+                applyFieldOrder(draggedId, id);
+            });
+        });
+    }
+
+    function applyFieldOrder(draggedId, targetId) {
+        fieldOrder.splice(fieldOrder.indexOf(draggedId), 1);
+        fieldOrder.splice(fieldOrder.indexOf(targetId), 0, draggedId);
+        const parent = document.getElementById('container-' + targetId).parentNode;
+        parent.insertBefore(
+            document.getElementById('container-' + draggedId),
+            document.getElementById('container-' + targetId)
+        );
+        store.set('field_order', fieldOrder.join(','));
+        updatePreview();
+    }
+
     function resetForm() {
         if(confirm(t().resetConfirm)) {
             fields.forEach(id => {
@@ -1088,6 +1189,11 @@
                 document.getElementById('ref-' + id).checked = false;
                 store.remove('ref_' + id);
             });
+            // Reset field order
+            store.remove('field_order');
+            fieldOrder = [...HIDEABLE_FIELDS];
+            const resetParent = document.getElementById('container-persona').parentNode;
+            HIDEABLE_FIELDS.forEach(id => resetParent.appendChild(document.getElementById('container-' + id)));
             updatePreview();
         }
     }
