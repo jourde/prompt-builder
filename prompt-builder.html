@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Prompt Builder</title>
+    <title>Prompt Builder</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -273,7 +273,7 @@
             margin-top: 10px; font-family: 'Fira Code', monospace;
         }
 
-.optional-toggle-row {
+        .optional-toggle-row {
             display: flex; gap: 10px; margin: 4px 0 16px;
         }
         .example-toggle-btn {
@@ -372,7 +372,7 @@
             .btn:hover, .btn-reset:hover, .fullscreen-btn:hover, .fs-exit-btn:hover { transform: none !important; }
         }
 
-        /* ---- Feature 1: Completion indicator ---- */
+        /* Completion indicator */
         .completion-row {
             display: flex; align-items: center; gap: 10px;
             padding: 8px 20px 2px;
@@ -388,7 +388,7 @@
             font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap;
         }
 
-        /* ---- Feature 3: Toggle all ---- */
+        /* Collapse-all toggle button */
         .toggle-all-btn {
             background: none; border: 1px solid var(--border); border-radius: 6px;
             color: var(--text-secondary); cursor: pointer; font-size: 0.72rem; font-family: inherit;
@@ -396,11 +396,11 @@
         }
         .toggle-all-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f4f8; }
 
-        /* ---- Feature 5: Word count warning ---- */
+        /* Word count warning thresholds */
         .prompt-stats.stats-warning { color: #bf5000; }
         .prompt-stats.stats-danger  { color: #b71c1c; font-weight: 700; }
 
-        /* ---- Feature 6: Saves panel ---- */
+        /* Save slots panel */
         .btn-saves {
             background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.35);
             color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
@@ -432,6 +432,22 @@
         .slot-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: #f0f4f8; }
         .slot-btn:disabled { opacity: 0.35; cursor: not-allowed; }
         .slot-btn.slot-clear-btn:not(:disabled):hover { border-color: #e57373; color: #e57373; background: #fff5f5; }
+
+        /* App title and tagline in header */
+        .app-title   { margin: 0; font-size: 1.5rem; letter-spacing: -0.5px; }
+        .app-tagline { font-size: 0.85rem; opacity: 0.9; }
+
+        /* Flex wrapper for drag handle + label inside field headers */
+        .field-label-group { display: flex; align-items: center; gap: 6px; }
+
+        /* "(optional)" suffix inside section toggle buttons */
+        .optional-suffix { font-weight: 400; opacity: 0.7; }
+
+        /* Instructional note below the editor panel header */
+        .panel-note { margin: 0; padding: 6px 20px 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
+
+        /* Preview panel scroll area background */
+        .preview-panel .panel-scroll { background-color: #fcfcfc; }
     </style>
 </head>
 <body>
@@ -442,16 +458,16 @@
 <div class="app-wrapper">
     <header role="banner">
         <div>
-            <h1 style="margin:0; font-size: 1.5rem; letter-spacing: -0.5px;" data-i18n="appTitle">Simple Prompt Builder</h1>
-            <span style="font-size: 0.85rem; opacity: 0.9;"><span data-i18n="tagline1">Structure your thinking. Shape the output.</span><br><em data-i18n="tagline2">Prompting is an intellectual process, more than a technical one.</em></span>
+            <h1 class="app-title" data-i18n="appTitle">Prompt Builder</h1>
+            <span class="app-tagline"><span data-i18n="tagline1">Structure your thinking. Shape the output.</span><br><em data-i18n="tagline2">Prompting is an intellectual process, more than a technical one.</em></span>
         </div>
         <div class="header-actions">
             <div role="group" aria-label="Language / Langue" class="lang-toggle">
                 <button type="button" id="lang-en" class="lang-btn" aria-pressed="true" onclick="setLanguage('en')">EN</button>
                 <button type="button" id="lang-fr" class="lang-btn" aria-pressed="false" onclick="setLanguage('fr')">FR</button>
             </div>
-            <button class="btn-saves" id="saves-toggle-btn" onclick="toggleSavesDrawer()" aria-expanded="false" aria-controls="saves-panel" data-i18n="savesTitle">Saves</button>
-            <button class="btn btn-reset" onclick="resetForm()">
+            <button type="button" class="btn-saves" id="saves-toggle-btn" onclick="toggleSavesDrawer()" aria-expanded="false" aria-controls="saves-panel" data-i18n="savesTitle">Saves</button>
+            <button type="button" class="btn btn-reset" onclick="resetForm()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 <span data-i18n="clearData">Clear Data</span>
             </button>
@@ -463,21 +479,21 @@
             <div class="saves-title" data-i18n="savesTitle">Saves</div>
             <div class="slot-row">
                 <input type="text" class="slot-name-input" id="slot-name-1" maxlength="40">
-                <button class="slot-btn slot-save-btn" onclick="saveSlot(1)" data-i18n="saveSlot">Save</button>
-                <button class="slot-btn slot-load-btn" id="slot-load-1" onclick="loadSlot(1)" disabled data-i18n="loadSlot">Load</button>
-                <button class="slot-btn slot-clear-btn" id="slot-clear-1" onclick="clearSlot(1)" disabled>✕</button>
+                <button type="button" class="slot-btn slot-save-btn" onclick="saveSlot(1)" data-i18n="saveSlot">Save</button>
+                <button type="button" class="slot-btn slot-load-btn" id="slot-load-1" onclick="loadSlot(1)" disabled data-i18n="loadSlot">Load</button>
+                <button type="button" class="slot-btn slot-clear-btn" id="slot-clear-1" onclick="clearSlot(1)" disabled>✕</button>
             </div>
             <div class="slot-row">
                 <input type="text" class="slot-name-input" id="slot-name-2" maxlength="40">
-                <button class="slot-btn slot-save-btn" onclick="saveSlot(2)" data-i18n="saveSlot">Save</button>
-                <button class="slot-btn slot-load-btn" id="slot-load-2" onclick="loadSlot(2)" disabled data-i18n="loadSlot">Load</button>
-                <button class="slot-btn slot-clear-btn" id="slot-clear-2" onclick="clearSlot(2)" disabled>✕</button>
+                <button type="button" class="slot-btn slot-save-btn" onclick="saveSlot(2)" data-i18n="saveSlot">Save</button>
+                <button type="button" class="slot-btn slot-load-btn" id="slot-load-2" onclick="loadSlot(2)" disabled data-i18n="loadSlot">Load</button>
+                <button type="button" class="slot-btn slot-clear-btn" id="slot-clear-2" onclick="clearSlot(2)" disabled>✕</button>
             </div>
             <div class="slot-row">
                 <input type="text" class="slot-name-input" id="slot-name-3" maxlength="40">
-                <button class="slot-btn slot-save-btn" onclick="saveSlot(3)" data-i18n="saveSlot">Save</button>
-                <button class="slot-btn slot-load-btn" id="slot-load-3" onclick="loadSlot(3)" disabled data-i18n="loadSlot">Load</button>
-                <button class="slot-btn slot-clear-btn" id="slot-clear-3" onclick="clearSlot(3)" disabled>✕</button>
+                <button type="button" class="slot-btn slot-save-btn" onclick="saveSlot(3)" data-i18n="saveSlot">Save</button>
+                <button type="button" class="slot-btn slot-load-btn" id="slot-load-3" onclick="loadSlot(3)" disabled data-i18n="loadSlot">Load</button>
+                <button type="button" class="slot-btn slot-clear-btn" id="slot-clear-3" onclick="clearSlot(3)" disabled>✕</button>
             </div>
         </div>
     </div>
@@ -491,15 +507,15 @@
             <div class="completion-row">
                 <div class="completion-bar"><div class="completion-fill" id="completion-fill"></div></div>
                 <span class="completion-text" id="completion-text"></span>
-                <button class="toggle-all-btn" id="toggle-all-btn" onclick="toggleAllFields()" data-i18n="hideAll">Hide all</button>
+                <button type="button" class="toggle-all-btn" id="toggle-all-btn" onclick="toggleAllFields()" data-i18n="hideAll">Hide all</button>
             </div>
-            <p style="margin: 0 0 0 0; padding: 6px 20px 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;" data-i18n="optionalNote">All fields are optional — fill only what's useful, and hide the ones you don't need.</p>
+            <p class="panel-note" data-i18n="optionalNote">All fields are optional — fill only what's useful, and hide the ones you don't need.</p>
             <div class="panel-scroll">
                 <div class="input-container reference-block">
                     <div class="label-row">
                         <label for="draft" data-i18n="fields.draft.label">Initial Request (for reference)</label>
                         <span class="badge-excluded" data-i18n="fields.draft.badge">not included in prompt</span>
-                        <button class="draft-toggle-btn" id="draft-toggle-btn" onclick="toggleDraftCollapse()" aria-expanded="false" aria-controls="hint-draft draft">
+                        <button type="button" class="draft-toggle-btn" id="draft-toggle-btn" onclick="toggleDraftCollapse()" aria-expanded="false" aria-controls="hint-draft draft">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                     </div>
@@ -512,11 +528,11 @@
 
                 <div class="input-container" id="container-persona">
                     <div class="field-header">
-                        <div style="display:flex;align-items:center;gap:6px;">
+                        <div class="field-label-group">
                             <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
                             <label for="persona" data-i18n="fields.persona.heading"># PERSONA/ROLE</label>
                         </div>
-                        <button class="hide-toggle-btn" id="hide-btn-persona" aria-pressed="false"
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-persona" aria-pressed="false"
                             aria-label="Hide Persona/Role from prompt"
                             onclick="toggleHide('persona')">
                             <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -526,16 +542,16 @@
                     <span id="hint-persona" class="hint" data-i18n="fields.persona.hint">The role GenAI should take on (e.g., experienced primary school teacher, special needs coordinator, school administrator).</span>
                     <textarea id="persona" placeholder="Act as a..."
                         data-i18n-ph="fields.persona.placeholder" aria-describedby="hint-persona"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-persona" onclick="toggleFS('persona')" aria-label="Expand Persona/Role to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-persona" onclick="toggleFS('persona')" aria-label="Expand Persona/Role to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
                 <div class="input-container" id="container-objective">
                     <div class="field-header">
-                        <div style="display:flex;align-items:center;gap:6px;">
+                        <div class="field-label-group">
                             <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
                             <label for="objective" data-i18n="fields.objective.heading"># OBJECTIVE</label>
                         </div>
-                        <button class="hide-toggle-btn" id="hide-btn-objective" aria-pressed="false"
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-objective" aria-pressed="false"
                             aria-label="Hide Objective from prompt"
                             onclick="toggleHide('objective')">
                             <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -545,16 +561,16 @@
                     <span id="hint-objective" class="hint" data-i18n="fields.objective.hint">What you want GenAI to produce or do (e.g., draft a letter, summarise a report, create a lesson plan).</span>
                     <textarea id="objective" placeholder="The main goal is to..."
                         data-i18n-ph="fields.objective.placeholder" aria-describedby="hint-objective"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-objective" onclick="toggleFS('objective')" aria-label="Expand Objective to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-objective" onclick="toggleFS('objective')" aria-label="Expand Objective to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
                 <div class="input-container" id="container-context">
                     <div class="field-header">
-                        <div style="display:flex;align-items:center;gap:6px;">
+                        <div class="field-label-group">
                             <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
                             <label for="context" data-i18n="fields.context.heading"># CONTEXT</label>
                         </div>
-                        <button class="hide-toggle-btn" id="hide-btn-context" aria-pressed="false"
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-context" aria-pressed="false"
                             aria-label="Hide Context from prompt"
                             onclick="toggleHide('context')">
                             <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -564,16 +580,16 @@
                     <span id="hint-context" class="hint" data-i18n="fields.context.hint">Relevant background (e.g., year group, subject, school type, specific situation or document you are working from).</span>
                     <textarea id="context" placeholder="This task arises from..."
                         data-i18n-ph="fields.context.placeholder" aria-describedby="hint-context"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-context" onclick="toggleFS('context')" aria-label="Expand Context to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-context" onclick="toggleFS('context')" aria-label="Expand Context to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
                 <div class="input-container" id="container-audience">
                     <div class="field-header">
-                        <div style="display:flex;align-items:center;gap:6px;">
+                        <div class="field-label-group">
                             <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
                             <label for="audience" data-i18n="fields.audience.heading"># AUDIENCE</label>
                         </div>
-                        <button class="hide-toggle-btn" id="hide-btn-audience" aria-pressed="false"
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-audience" aria-pressed="false"
                             aria-label="Hide Audience from prompt"
                             onclick="toggleHide('audience')">
                             <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -583,16 +599,16 @@
                     <span id="hint-audience" class="hint" data-i18n="fields.audience.hint">Who will read or use the output (e.g., parents, pupils aged 10–11, teaching staff, school management).</span>
                     <textarea id="audience" placeholder="The target audience is..."
                         data-i18n-ph="fields.audience.placeholder" aria-describedby="hint-audience"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-audience" onclick="toggleFS('audience')" aria-label="Expand Audience to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-audience" onclick="toggleFS('audience')" aria-label="Expand Audience to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
                 <div class="input-container" id="container-boundaries">
                     <div class="field-header">
-                        <div style="display:flex;align-items:center;gap:6px;">
+                        <div class="field-label-group">
                             <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
                             <label for="boundaries" data-i18n="fields.boundaries.heading"># BOUNDARIES & STYLE</label>
                         </div>
-                        <button class="hide-toggle-btn" id="hide-btn-boundaries" aria-pressed="false"
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-boundaries" aria-pressed="false"
                             aria-label="Hide Boundaries &amp; Style from prompt"
                             onclick="toggleHide('boundaries')">
                             <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -602,20 +618,20 @@
                     <span id="hint-boundaries" class="hint" data-i18n="fields.boundaries.hint">Tone, format, length, or things to avoid (e.g., plain language, bullet points, max one page, no jargon).</span>
                     <textarea id="boundaries" placeholder="Ensure the response is..."
                         data-i18n-ph="fields.boundaries.placeholder" aria-describedby="hint-boundaries"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-boundaries" onclick="toggleFS('boundaries')" aria-label="Expand Boundaries & Style to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-boundaries" onclick="toggleFS('boundaries')" aria-label="Expand Boundaries & Style to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
                 <div id="bottom-anchor">
                 <hr aria-hidden="true">
 
                 <div class="optional-toggle-row">
-                    <button id="steps-toggle-btn" class="example-toggle-btn" onclick="toggleSteps()"
+                    <button type="button" id="steps-toggle-btn" class="example-toggle-btn" onclick="toggleOptionalSection('steps')"
                         aria-expanded="false" aria-controls="steps-container">
-                        + Add Steps / Process <span style="font-weight:400; opacity:0.7;">(optional)</span>
+                        + Add Steps / Process <span class="optional-suffix">(optional)</span>
                     </button>
-                    <button id="example-toggle-btn" class="example-toggle-btn" onclick="toggleExample()"
+                    <button type="button" id="example-toggle-btn" class="example-toggle-btn" onclick="toggleOptionalSection('example')"
                         aria-expanded="false" aria-controls="example-container">
-                        + Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>
+                        + Add Example <span class="optional-suffix">(optional)</span>
                     </button>
                 </div>
 
@@ -624,7 +640,7 @@
                     <span id="hint-steps" class="hint" data-i18n="fields.steps.hint">The sequential steps the response should follow (e.g., 1. Summarise the situation. 2. Identify key issues. 3. Propose solutions.).</span>
                     <textarea id="steps" placeholder="Step 1: ..."
                         data-i18n-ph="fields.steps.placeholder" aria-describedby="hint-steps"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-steps" onclick="toggleFS('steps')" aria-label="Expand Steps / Process to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-steps" onclick="toggleFS('steps')" aria-label="Expand Steps / Process to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
                 <div class="input-container" id="example-container" style="display:none;">
@@ -632,7 +648,7 @@
                     <span id="hint-example" class="hint" data-i18n="fields.example.hint">A sample of the kind of output you expect — useful for tone, structure, or level of detail.</span>
                     <textarea id="example" placeholder="For example..."
                         data-i18n-ph="fields.example.placeholder" aria-describedby="hint-example"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-example" onclick="toggleFS('example')" aria-label="Expand Example to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-example" onclick="toggleFS('example')" aria-label="Expand Example to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
                 <fieldset class="refinements">
                     <legend class="refinements-title"><span data-i18n="refinementsLegend">Optional refinements </span><span style="font-weight:400;" data-i18n="refinementsNote">— behaviours to add to the response</span></legend>
@@ -662,23 +678,23 @@
                 <span data-i18n="previewTitle">Live Master Prompt Preview</span>
                 <span id="save-status" aria-live="polite" aria-atomic="true">Saved</span>
             </div>
-            <div class="panel-scroll" style="background-color: #fcfcfc;">
+            <div class="panel-scroll">
                 <div id="preview-body" class="preview-body" role="region" aria-label="Generated prompt" tabindex="0"></div>
                 <div id="prompt-stats" class="prompt-stats"></div>
             </div>
             <div class="actions">
-                <button class="btn btn-copy" onclick="copyToClipboard()" title="Copy to Clipboard (Ctrl+Shift+C / ⌘⇧C)"
+                <button type="button" class="btn btn-copy" onclick="copyToClipboard()" title="Copy to Clipboard (Ctrl+Shift+C / ⌘⇧C)"
                     aria-label="Copy prompt to clipboard" data-i18n="copy" data-i18n-aria="copyAria">Copy to Clipboard</button>
-                <button class="btn btn-download" onclick="downloadPrompt()"
+                <button type="button" class="btn btn-download" onclick="downloadPrompt()"
                     aria-label="Export prompt as Markdown file" data-i18n="exportMd" data-i18n-aria="exportAria">Export .md</button>
-                <button class="btn btn-download" onclick="downloadPlainText()"
+                <button type="button" class="btn btn-download" onclick="downloadPlainText()"
                     aria-label="Export prompt as plain text file" data-i18n="exportTxt" data-i18n-aria="exportTxtAria">Export .txt</button>
             </div>
         </section>
     </main>
 
     <footer class="app-footer">
-        <button class="footer-legal-btn" onclick="openLegal()" aria-haspopup="dialog">Legal Notice &amp; Privacy Policy</button>
+        <button type="button" class="footer-legal-btn" onclick="openLegal()" aria-haspopup="dialog">Legal Notice &amp; Privacy Policy</button>
     </footer>
 </div>
 
@@ -687,7 +703,7 @@
     <div class="modal">
         <div class="modal-header">
             <h2 id="legal-modal-title">Legal Notice &amp; Privacy Policy</h2>
-            <button class="modal-close" onclick="closeLegal()" aria-label="Close legal notice">&#x2715;</button>
+            <button type="button" class="modal-close" onclick="closeLegal()" aria-label="Close legal notice">&#x2715;</button>
         </div>
         <div class="modal-body">
             <h3>1. Publisher &amp; Hosting</h3>
@@ -931,35 +947,17 @@
         return str.replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars) ? vars[k] : m);
     }
 
-    function setExampleBtnLabel(btn, isVisible) {
+    // addKey / removeKey are i18n keys, e.g. 'addSteps' / 'removeSteps'
+    function setOptionalSectionBtnLabel(btn, isVisible, addKey, removeKey) {
         if (isVisible) {
-            btn.textContent = t().removeExample;
+            btn.textContent = t()[removeKey];
             btn.classList.add('active');
             btn.setAttribute('aria-expanded', 'true');
         } else {
             btn.textContent = '';
-            btn.appendChild(document.createTextNode(t().addExample));
+            btn.appendChild(document.createTextNode(t()[addKey]));
             const span = document.createElement('span');
-            span.style.fontWeight = '400';
-            span.style.opacity = '0.7';
-            span.textContent = t().optionalSuffix;
-            btn.appendChild(span);
-            btn.classList.remove('active');
-            btn.setAttribute('aria-expanded', 'false');
-        }
-    }
-
-    function setStepsBtnLabel(btn, isVisible) {
-        if (isVisible) {
-            btn.textContent = t().removeSteps;
-            btn.classList.add('active');
-            btn.setAttribute('aria-expanded', 'true');
-        } else {
-            btn.textContent = '';
-            btn.appendChild(document.createTextNode(t().addSteps));
-            const span = document.createElement('span');
-            span.style.fontWeight = '400';
-            span.style.opacity = '0.7';
+            span.className = 'optional-suffix';
             span.textContent = t().optionalSuffix;
             btn.appendChild(span);
             btn.classList.remove('active');
@@ -995,14 +993,17 @@
         // Hide/show buttons reflect current state with localized labels
         HIDEABLE_FIELDS.forEach(id => applyHiddenState(id, hiddenFields.has(id)));
 
-        // Example toggle reflects current visibility
-        const stBtn = document.getElementById('steps-toggle-btn');
-        const stVisible = document.getElementById('steps-container').style.display !== 'none';
-        setStepsBtnLabel(stBtn, stVisible);
-
-        const exBtn = document.getElementById('example-toggle-btn');
-        const exVisible = document.getElementById('example-container').style.display !== 'none';
-        setExampleBtnLabel(exBtn, exVisible);
+        // Optional section toggles reflect current visibility
+        setOptionalSectionBtnLabel(
+            document.getElementById('steps-toggle-btn'),
+            document.getElementById('steps-container').style.display !== 'none',
+            'addSteps', 'removeSteps'
+        );
+        setOptionalSectionBtnLabel(
+            document.getElementById('example-toggle-btn'),
+            document.getElementById('example-container').style.display !== 'none',
+            'addExample', 'removeExample'
+        );
 
         // Language toggle pressed state
         document.getElementById('lang-en').setAttribute('aria-pressed', currentLang === 'en' ? 'true' : 'false');
@@ -1099,8 +1100,7 @@
         draftCollapsed = store.get('draft_collapsed') !== 'false';
         applyDraftCollapse();
 
-        initSlots();
-        applyLanguage(); // sets all text + composed labels, then calls updatePreview()
+        applyLanguage(); // sets all text + composed labels, calls initSlots(), then updatePreview()
     };
 
     function applyHiddenState(id, isHidden) {
@@ -1128,7 +1128,6 @@
         isNowHidden ? hiddenFields.add(id) : hiddenFields.delete(id);
         store.set(id + '_hidden', isNowHidden ? 'true' : 'false');
         applyHiddenState(id, isNowHidden);
-        updateToggleAllBtn();
         updatePreview();
         const label = t().fields[id].label;
         announce(isNowHidden ? fmt(t().msgHidden, { f: label }) : fmt(t().msgShown, { f: label }));
@@ -1231,40 +1230,24 @@
         }
     }
 
-    function toggleSteps() {
-        const container = document.getElementById('steps-container');
-        const btn = document.getElementById('steps-toggle-btn');
+    function toggleOptionalSection(id) {
+        const container = document.getElementById(id + '-container');
+        const btn = document.getElementById(id + '-toggle-btn');
         const isVisible = container.style.display !== 'none';
+        const keys = id === 'steps'
+            ? { add: 'addSteps',   remove: 'removeSteps',   shown: 'stepsShown',   hidden: 'stepsHidden'   }
+            : { add: 'addExample', remove: 'removeExample', shown: 'exampleShown', hidden: 'exampleHidden' };
         if (isVisible) {
             container.style.display = 'none';
-            setStepsBtnLabel(btn, false);
-            store.set('steps_visible', 'false');
-            announce(t().stepsHidden);
+            setOptionalSectionBtnLabel(btn, false, keys.add, keys.remove);
+            store.set(id + '_visible', 'false');
+            announce(t()[keys.hidden]);
         } else {
             container.style.display = 'block';
-            setStepsBtnLabel(btn, true);
-            store.set('steps_visible', 'true');
-            document.getElementById('steps').focus();
-            announce(t().stepsShown);
-        }
-        updatePreview();
-    }
-
-    function toggleExample() {
-        const container = document.getElementById('example-container');
-        const btn = document.getElementById('example-toggle-btn');
-        const isVisible = container.style.display !== 'none';
-        if (isVisible) {
-            container.style.display = 'none';
-            setExampleBtnLabel(btn, false);
-            store.set('example_visible', 'false');
-            announce(t().exampleHidden);
-        } else {
-            container.style.display = 'block';
-            setExampleBtnLabel(btn, true);
-            store.set('example_visible', 'true');
-            document.getElementById('example').focus();
-            announce(t().exampleShown);
+            setOptionalSectionBtnLabel(btn, true, keys.add, keys.remove);
+            store.set(id + '_visible', 'true');
+            document.getElementById(id).focus();
+            announce(t()[keys.shown]);
         }
         updatePreview();
     }
@@ -1338,18 +1321,21 @@
         btn.textContent = allFieldsViewCollapsed ? t().showAll : t().hideAll;
     }
 
-    // F4 — export plain text (.txt)
-    function downloadPlainText() {
-        const text = getPlainText();
-        const blob = new Blob([text], { type: 'text/plain' });
+    function triggerDownload(text, filename, mimeType) {
+        const blob = new Blob([text], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `prompt_${new Date().toISOString().split('T')[0]}.txt`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Export plain text (.txt)
+    function downloadPlainText() {
+        triggerDownload(getPlainText(), `prompt_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
         announce(t().msgExported);
     }
 
@@ -1397,11 +1383,11 @@
         }
         const stVis = state.stepsVisible || false;
         document.getElementById('steps-container').style.display = stVis ? 'block' : 'none';
-        setStepsBtnLabel(document.getElementById('steps-toggle-btn'), stVis);
+        setOptionalSectionBtnLabel(document.getElementById('steps-toggle-btn'), stVis, 'addSteps', 'removeSteps');
         store.set('steps_visible', stVis ? 'true' : 'false');
         const exVis = state.exampleVisible || false;
         document.getElementById('example-container').style.display = exVis ? 'block' : 'none';
-        setExampleBtnLabel(document.getElementById('example-toggle-btn'), exVis);
+        setOptionalSectionBtnLabel(document.getElementById('example-toggle-btn'), exVis, 'addExample', 'removeExample');
         store.set('example_visible', exVis ? 'true' : 'false');
         REFINEMENTS.forEach(id => {
             const checked = (state.refinements && state.refinements[id]) || false;
@@ -1461,17 +1447,13 @@
         for (let n = 1; n <= 3; n++) updateSlotUI(n);
     }
 
+    // Export Markdown (.md) — uses innerText to preserve rendered whitespace
     function downloadPrompt() {
-        const text = document.getElementById('preview-body').innerText;
-        const blob = new Blob([text], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `prompt_${new Date().toISOString().split('T')[0]}.md`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        triggerDownload(
+            document.getElementById('preview-body').innerText,
+            `prompt_${new Date().toISOString().split('T')[0]}.md`,
+            'text/markdown'
+        );
         announce(t().msgExported);
     }
 
@@ -1579,10 +1561,10 @@
                 applyHiddenState(id, false);
             });
             document.getElementById('steps-container').style.display = 'none';
-            setStepsBtnLabel(document.getElementById('steps-toggle-btn'), false);
+            setOptionalSectionBtnLabel(document.getElementById('steps-toggle-btn'), false, 'addSteps', 'removeSteps');
             store.remove('steps_visible');
             document.getElementById('example-container').style.display = 'none';
-            setExampleBtnLabel(document.getElementById('example-toggle-btn'), false);
+            setOptionalSectionBtnLabel(document.getElementById('example-toggle-btn'), false, 'addExample', 'removeExample');
             store.remove('example_visible');
             REFINEMENTS.forEach(id => {
                 document.getElementById('ref-' + id).checked = false;
