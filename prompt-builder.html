@@ -358,6 +358,67 @@
             }
             .btn:hover, .btn-reset:hover, .fullscreen-btn:hover, .fs-exit-btn:hover { transform: none !important; }
         }
+
+        /* ---- Feature 1: Completion indicator ---- */
+        .completion-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 20px 2px;
+        }
+        .completion-bar {
+            flex: 1; height: 5px; background: #dde3e8; border-radius: 3px; overflow: hidden;
+        }
+        .completion-fill {
+            height: 100%; background: var(--primary); border-radius: 3px;
+            transition: width 0.3s ease; width: 0%;
+        }
+        .completion-text {
+            font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap;
+        }
+
+        /* ---- Feature 3: Toggle all ---- */
+        .toggle-all-btn {
+            background: none; border: 1px solid var(--border); border-radius: 6px;
+            color: var(--text-secondary); cursor: pointer; font-size: 0.72rem; font-family: inherit;
+            padding: 3px 9px; font-weight: 600; transition: 0.15s; white-space: nowrap;
+        }
+        .toggle-all-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f4f8; }
+
+        /* ---- Feature 5: Word count warning ---- */
+        .prompt-stats.stats-warning { color: #bf5000; }
+        .prompt-stats.stats-danger  { color: #b71c1c; font-weight: 700; }
+
+        /* ---- Feature 6: Saves panel ---- */
+        .btn-saves {
+            background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.35);
+            color: #fff; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+            font-family: inherit; font-weight: 600; padding: 5px 12px;
+            display: flex; align-items: center; gap: 6px; transition: 0.15s;
+        }
+        .btn-saves:hover { background: rgba(255,255,255,0.22); }
+        .btn-saves.saves-open { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+        .saves-panel {
+            background: #eef2f5; border-bottom: 1px solid var(--border); padding: 10px 20px;
+        }
+        .saves-panel-inner { display: flex; flex-direction: column; gap: 7px; max-width: 540px; }
+        .saves-title {
+            font-size: 0.72rem; font-weight: 700; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px;
+        }
+        .slot-row { display: flex; align-items: center; gap: 7px; }
+        .slot-name-input {
+            flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 5px 9px;
+            font-size: 0.8rem; font-family: inherit; background: #fff;
+            color: var(--text-main); min-width: 0;
+        }
+        .slot-name-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(55,71,79,0.15); }
+        .slot-btn {
+            border: 1px solid var(--border); border-radius: 6px; background: #fff;
+            color: var(--text-secondary); font-size: 0.75rem; font-family: inherit;
+            font-weight: 600; padding: 5px 10px; cursor: pointer; transition: 0.15s; white-space: nowrap;
+        }
+        .slot-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: #f0f4f8; }
+        .slot-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .slot-btn.slot-clear-btn:not(:disabled):hover { border-color: #e57373; color: #e57373; background: #fff5f5; }
     </style>
 </head>
 <body>
@@ -376,6 +437,7 @@
                 <button type="button" id="lang-en" class="lang-btn" aria-pressed="true" onclick="setLanguage('en')">EN</button>
                 <button type="button" id="lang-fr" class="lang-btn" aria-pressed="false" onclick="setLanguage('fr')">FR</button>
             </div>
+            <button class="btn-saves" id="saves-toggle-btn" onclick="toggleSavesDrawer()" aria-expanded="false" aria-controls="saves-panel" data-i18n="savesTitle">Saves</button>
             <button class="btn btn-reset" onclick="resetForm()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 <span data-i18n="clearData">Clear Data</span>
@@ -383,13 +445,42 @@
         </div>
     </header>
 
+    <div id="saves-panel" class="saves-panel" role="region" style="display:none;">
+        <div class="saves-panel-inner">
+            <div class="saves-title" data-i18n="savesTitle">Saves</div>
+            <div class="slot-row">
+                <input type="text" class="slot-name-input" id="slot-name-1" maxlength="40">
+                <button class="slot-btn slot-save-btn" onclick="saveSlot(1)" data-i18n="saveSlot">Save</button>
+                <button class="slot-btn slot-load-btn" id="slot-load-1" onclick="loadSlot(1)" disabled data-i18n="loadSlot">Load</button>
+                <button class="slot-btn slot-clear-btn" id="slot-clear-1" onclick="clearSlot(1)" disabled>✕</button>
+            </div>
+            <div class="slot-row">
+                <input type="text" class="slot-name-input" id="slot-name-2" maxlength="40">
+                <button class="slot-btn slot-save-btn" onclick="saveSlot(2)" data-i18n="saveSlot">Save</button>
+                <button class="slot-btn slot-load-btn" id="slot-load-2" onclick="loadSlot(2)" disabled data-i18n="loadSlot">Load</button>
+                <button class="slot-btn slot-clear-btn" id="slot-clear-2" onclick="clearSlot(2)" disabled>✕</button>
+            </div>
+            <div class="slot-row">
+                <input type="text" class="slot-name-input" id="slot-name-3" maxlength="40">
+                <button class="slot-btn slot-save-btn" onclick="saveSlot(3)" data-i18n="saveSlot">Save</button>
+                <button class="slot-btn slot-load-btn" id="slot-load-3" onclick="loadSlot(3)" disabled data-i18n="loadSlot">Load</button>
+                <button class="slot-btn slot-clear-btn" id="slot-clear-3" onclick="clearSlot(3)" disabled>✕</button>
+            </div>
+        </div>
+    </div>
+
     <!-- aria-live region for status announcements (WCAG 4.1.3) -->
     <div id="a11y-announce" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
 
     <main id="main-content" class="main-content">
         <section class="editor-panel" aria-label="Prompt input builder">
             <div class="panel-header" aria-hidden="true" data-i18n="inputBuilder">Input Builder</div>
-            <p style="margin: 0 0 0 0; padding: 10px 20px 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;" data-i18n="optionalNote">All fields are optional — fill only what's useful, and hide the ones you don't need.</p>
+            <div class="completion-row">
+                <div class="completion-bar"><div class="completion-fill" id="completion-fill"></div></div>
+                <span class="completion-text" id="completion-text"></span>
+                <button class="toggle-all-btn" id="toggle-all-btn" onclick="toggleAllFields()" data-i18n="hideAll">Hide all</button>
+            </div>
+            <p style="margin: 0 0 0 0; padding: 6px 20px 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;" data-i18n="optionalNote">All fields are optional — fill only what's useful, and hide the ones you don't need.</p>
             <div class="panel-scroll">
                 <div class="input-container reference-block">
                     <div class="label-row">
@@ -567,6 +658,8 @@
                     aria-label="Copy prompt to clipboard" data-i18n="copy" data-i18n-aria="copyAria">Copy to Clipboard</button>
                 <button class="btn btn-download" onclick="downloadPrompt()"
                     aria-label="Export prompt as Markdown file" data-i18n="exportMd" data-i18n-aria="exportAria">Export .md</button>
+                <button class="btn btn-download" onclick="downloadPlainText()"
+                    aria-label="Export prompt as plain text file" data-i18n="exportTxt" data-i18n-aria="exportTxtAria">Export .txt</button>
             </div>
         </section>
     </main>
@@ -659,6 +752,18 @@
             copyAria: `Copy prompt to clipboard`,
             exportMd: `Export .md`,
             exportAria: `Export prompt as Markdown file`,
+            exportTxt: `Export .txt`,
+            exportTxtAria: `Export prompt as plain text file`,
+            completion: `{f} / {total} filled`,
+            hideAll: `Hide all`,
+            showAll: `Show all`,
+            savesTitle: `Saves`,
+            saveSlot: `Save`,
+            loadSlot: `Load`,
+            slotDefault: `Slot {n}`,
+            slotSaved: `Saved to "{n}"`,
+            slotLoaded: `"{n}" loaded`,
+            slotCleared: `Slot cleared`,
             addSteps: `+ Add Steps / Process `,
             removeSteps: `− Remove Steps / Process`,
             stepsShown: `Steps / Process section shown.`,
@@ -731,6 +836,18 @@
             copyAria: `Copier le prompt dans le presse-papiers`,
             exportMd: `Exporter .md`,
             exportAria: `Exporter le prompt en fichier Markdown`,
+            exportTxt: `Exporter .txt`,
+            exportTxtAria: `Exporter le prompt en fichier texte brut`,
+            completion: `{f} / {total} remplis`,
+            hideAll: `Tout masquer`,
+            showAll: `Tout afficher`,
+            savesTitle: `Sauvegardes`,
+            saveSlot: `Sauver`,
+            loadSlot: `Charger`,
+            slotDefault: `Slot {n}`,
+            slotSaved: `Sauvegardé dans « {n} »`,
+            slotLoaded: `« {n} » chargé`,
+            slotCleared: `Slot vidé`,
             addSteps: `+ Ajouter des étapes / processus `,
             removeSteps: `− Retirer les étapes / processus`,
             stepsShown: `Section Étapes / Processus affichée.`,
@@ -881,6 +998,9 @@
         const status = document.getElementById('save-status');
         if (status) status.innerText = dict.saved;
 
+        updateToggleAllBtn();
+        initSlots();
+
         updatePreview();
     }
 
@@ -965,6 +1085,7 @@
         draftCollapsed = store.get('draft_collapsed') !== 'false';
         applyDraftCollapse();
 
+        initSlots();
         applyLanguage(); // sets all text + composed labels, then calls updatePreview()
     };
 
@@ -993,6 +1114,7 @@
         isNowHidden ? hiddenFields.add(id) : hiddenFields.delete(id);
         store.set(id + '_hidden', isNowHidden ? 'true' : 'false');
         applyHiddenState(id, isNowHidden);
+        updateToggleAllBtn();
         updatePreview();
         const label = t().fields[id].label;
         announce(isNowHidden ? fmt(t().msgHidden, { f: label }) : fmt(t().msgShown, { f: label }));
@@ -1007,43 +1129,38 @@
 
     function updatePreview() {
         const dict = t();
+
+        // F2: skip empty fields entirely
         const segments = fieldOrder
-            .filter(id => !hiddenFields.has(id))
-            .map(id => {
-                const heading = dict.fields[id].heading;
-                const val = document.getElementById(id).value || fmt(dict.notDefined, { f: heading.slice(2) });
-                return heading + '\n' + val;
-            });
+            .filter(id => !hiddenFields.has(id) && document.getElementById(id).value.trim())
+            .map(id => dict.fields[id].heading + '\n' + document.getElementById(id).value);
 
         const stepsVisible = document.getElementById('steps-container').style.display !== 'none';
-        if (stepsVisible) {
-            const heading = dict.fields.steps.heading;
-            const s = document.getElementById('steps').value || fmt(dict.notDefined, { f: heading.slice(2) });
-            segments.push(heading + '\n' + s);
-        }
+        const stepsVal = document.getElementById('steps').value.trim();
+        if (stepsVisible && stepsVal) segments.push(dict.fields.steps.heading + '\n' + stepsVal);
 
         const exampleVisible = document.getElementById('example-container').style.display !== 'none';
-        if (exampleVisible) {
-            const heading = dict.fields.example.heading;
-            const e = document.getElementById('example').value || fmt(dict.notDefined, { f: heading.slice(2) });
-            segments.push(heading + '\n' + e);
-        }
+        const exampleVal = document.getElementById('example').value.trim();
+        if (exampleVisible && exampleVal) segments.push(dict.fields.example.heading + '\n' + exampleVal);
 
         const refinements = REFINEMENTS
             .filter(id => document.getElementById('ref-' + id).checked)
             .map(id => '- ' + dict.refTexts[id]);
-        if (refinements.length) {
-            segments.push(dict.additionalInstructions + '\n' + refinements.join('\n'));
-        }
+        if (refinements.length) segments.push(dict.additionalInstructions + '\n' + refinements.join('\n'));
 
         const template = segments.join('\n\n');
-        // Highlight headings, including French accented capitals (É, Ô, È, Ç…)
         const highlighted = template.replace(/(# [A-ZÀ-ÖØ-Þ0-9 &\/]+)/g, '<span class="tag-h1">$1</span>');
         document.getElementById('preview-body').innerHTML = highlighted;
 
+        // F5: word count with warning thresholds
         const words = template.trim().split(/\s+/).filter(Boolean).length;
         const chars = template.length;
-        document.getElementById('prompt-stats').textContent = fmt(dict.stats, { w: words, c: chars.toLocaleString() });
+        const statsEl = document.getElementById('prompt-stats');
+        statsEl.textContent = fmt(dict.stats, { w: words, c: chars.toLocaleString() });
+        statsEl.className = 'prompt-stats' + (words > 800 ? ' stats-danger' : words > 500 ? ' stats-warning' : '');
+
+        // F1: completion indicator
+        updateCompletionIndicator();
     }
 
     function announce(msg) {
@@ -1138,8 +1255,12 @@
         updatePreview();
     }
 
+    function getPlainText() {
+        return document.getElementById('preview-body').innerText.replace(/^# /gm, '');
+    }
+
     function copyToClipboard() {
-        const text = document.getElementById('preview-body').innerText;
+        const text = getPlainText();
         const btn = document.querySelector('.btn-copy');
         const showCopied = () => {
             btn.innerText = t().copied;
@@ -1174,6 +1295,163 @@
         } catch (e) {
             return false;
         }
+    }
+
+    // F1 — completion indicator
+    function updateCompletionIndicator() {
+        const visibleFields = fieldOrder.filter(id => !hiddenFields.has(id));
+        const stVis = document.getElementById('steps-container').style.display !== 'none';
+        const exVis = document.getElementById('example-container').style.display !== 'none';
+        const total = visibleFields.length + (stVis ? 1 : 0) + (exVis ? 1 : 0);
+        const filled = visibleFields.filter(id => document.getElementById(id).value.trim()).length
+            + (stVis && document.getElementById('steps').value.trim() ? 1 : 0)
+            + (exVis && document.getElementById('example').value.trim() ? 1 : 0);
+        const pct = total > 0 ? Math.round(filled / total * 100) : 0;
+        document.getElementById('completion-fill').style.width = pct + '%';
+        document.getElementById('completion-text').textContent = fmt(t().completion, { f: filled, total });
+    }
+
+    // F3 — toggle all fields visibility
+    function toggleAllFields() {
+        const allHidden = HIDEABLE_FIELDS.every(id => hiddenFields.has(id));
+        HIDEABLE_FIELDS.forEach(id => {
+            const nowHidden = !allHidden;
+            nowHidden ? hiddenFields.add(id) : hiddenFields.delete(id);
+            store.set(id + '_hidden', nowHidden ? 'true' : 'false');
+            applyHiddenState(id, nowHidden);
+        });
+        updateToggleAllBtn();
+        updatePreview();
+    }
+
+    function updateToggleAllBtn() {
+        const btn = document.getElementById('toggle-all-btn');
+        if (!btn) return;
+        const allHidden = HIDEABLE_FIELDS.every(id => hiddenFields.has(id));
+        btn.textContent = allHidden ? t().showAll : t().hideAll;
+    }
+
+    // F4 — export plain text (.txt)
+    function downloadPlainText() {
+        const text = getPlainText();
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `prompt_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        announce(t().msgExported);
+    }
+
+    // F6 — named save slots
+    function toggleSavesDrawer() {
+        const panel = document.getElementById('saves-panel');
+        const btn = document.getElementById('saves-toggle-btn');
+        const isOpen = panel.style.display !== 'none';
+        panel.style.display = isOpen ? 'none' : 'block';
+        btn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+        btn.classList.toggle('saves-open', !isOpen);
+    }
+
+    function buildSlotState(name) {
+        const state = { name, fields: {}, hiddenFields: [...hiddenFields], fieldOrder: [...fieldOrder],
+            stepsVisible: document.getElementById('steps-container').style.display !== 'none',
+            exampleVisible: document.getElementById('example-container').style.display !== 'none',
+            refinements: {}, draftCollapsed };
+        fields.forEach(id => { state.fields[id] = document.getElementById(id).value; });
+        REFINEMENTS.forEach(id => { state.refinements[id] = document.getElementById('ref-' + id).checked; });
+        return state;
+    }
+
+    function restoreSlotState(state) {
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.value = state.fields[id] || '';
+            store.set(id, el.value);
+        });
+        hiddenFields.clear();
+        (state.hiddenFields || []).forEach(id => hiddenFields.add(id));
+        HIDEABLE_FIELDS.forEach(id => {
+            store.set(id + '_hidden', hiddenFields.has(id) ? 'true' : 'false');
+            applyHiddenState(id, hiddenFields.has(id));
+        });
+        const validOrder = (state.fieldOrder || []).filter(id => HIDEABLE_FIELDS.includes(id));
+        if (validOrder.length === HIDEABLE_FIELDS.length) {
+            fieldOrder = validOrder;
+            store.set('field_order', fieldOrder.join(','));
+            store.set('field_order_default', HIDEABLE_FIELDS.join(','));
+            const parent = document.getElementById('container-persona').parentNode;
+            const anchor = document.getElementById('bottom-anchor');
+            fieldOrder.forEach(id => parent.insertBefore(document.getElementById('container-' + id), anchor));
+        }
+        const stVis = state.stepsVisible || false;
+        document.getElementById('steps-container').style.display = stVis ? 'block' : 'none';
+        setStepsBtnLabel(document.getElementById('steps-toggle-btn'), stVis);
+        store.set('steps_visible', stVis ? 'true' : 'false');
+        const exVis = state.exampleVisible || false;
+        document.getElementById('example-container').style.display = exVis ? 'block' : 'none';
+        setExampleBtnLabel(document.getElementById('example-toggle-btn'), exVis);
+        store.set('example_visible', exVis ? 'true' : 'false');
+        REFINEMENTS.forEach(id => {
+            const checked = (state.refinements && state.refinements[id]) || false;
+            document.getElementById('ref-' + id).checked = checked;
+            store.set('ref_' + id, checked ? 'true' : 'false');
+        });
+        draftCollapsed = state.draftCollapsed !== undefined ? state.draftCollapsed : true;
+        store.set('draft_collapsed', draftCollapsed ? 'true' : 'false');
+        applyDraftCollapse();
+        updateToggleAllBtn();
+        updatePreview();
+    }
+
+    function saveSlot(n) {
+        const nameInput = document.getElementById('slot-name-' + n);
+        const name = nameInput.value.trim() || fmt(t().slotDefault, { n });
+        nameInput.value = name;
+        store.set('slot_' + n, JSON.stringify(buildSlotState(name)));
+        updateSlotUI(n);
+        announce(fmt(t().slotSaved, { n: name }));
+    }
+
+    function loadSlot(n) {
+        const raw = store.get('slot_' + n);
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        restoreSlotState(state);
+        announce(fmt(t().slotLoaded, { n: state.name }));
+    }
+
+    function clearSlot(n) {
+        store.remove('slot_' + n);
+        document.getElementById('slot-name-' + n).value = '';
+        updateSlotUI(n);
+        announce(t().slotCleared);
+    }
+
+    function updateSlotUI(n) {
+        const raw = store.get('slot_' + n);
+        const loadBtn = document.getElementById('slot-load-' + n);
+        const clearBtn = document.getElementById('slot-clear-' + n);
+        const nameInput = document.getElementById('slot-name-' + n);
+        if (raw) {
+            const state = JSON.parse(raw);
+            nameInput.value = state.name;
+            loadBtn.disabled = false;
+            clearBtn.disabled = false;
+        } else {
+            nameInput.value = '';
+            nameInput.placeholder = fmt(t().slotDefault, { n });
+            loadBtn.disabled = true;
+            clearBtn.disabled = true;
+        }
+    }
+
+    function initSlots() {
+        for (let n = 1; n <= 3; n++) updateSlotUI(n);
     }
 
     function downloadPrompt() {
@@ -1309,6 +1587,7 @@
             const resetParent = document.getElementById('container-persona').parentNode;
             const resetAnchor = document.getElementById('bottom-anchor');
             HIDEABLE_FIELDS.forEach(id => resetParent.insertBefore(document.getElementById('container-' + id), resetAnchor));
+            updateToggleAllBtn();
             updatePreview();
         }
     }
