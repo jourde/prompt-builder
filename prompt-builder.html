@@ -139,6 +139,19 @@
         .reference-block.draft-collapsed { padding-bottom: 16px; }
         .reference-block.draft-collapsed .hint,
         .reference-block.draft-collapsed textarea { display: none; }
+
+        /* Collapse-all view: hide textareas/hints, keep titles */
+        .fields-view-collapsed .input-container .hint,
+        .fields-view-collapsed .input-container textarea,
+        .fields-view-collapsed .input-container .fullscreen-btn,
+        .fields-view-collapsed .reference-block .hint,
+        .fields-view-collapsed .reference-block textarea,
+        .fields-view-collapsed #steps-container .hint,
+        .fields-view-collapsed #steps-container textarea,
+        .fields-view-collapsed #example-container .hint,
+        .fields-view-collapsed #example-container textarea { display: none; }
+        .fields-view-collapsed .input-container { margin-bottom: 8px; }
+        .fields-view-collapsed .reference-block { padding-bottom: 16px; }
         .draft-toggle-btn {
             background: none; border: none; cursor: pointer; padding: 2px 5px;
             color: var(--text-secondary); display: inline-flex; align-items: center;
@@ -719,6 +732,7 @@
     const HIDEABLE_FIELDS = ['persona', 'objective', 'context', 'audience', 'boundaries'];
     let fieldOrder = [...HIDEABLE_FIELDS]; // mutable; updated by drag-and-drop
     let draftCollapsed = true;
+    let allFieldsViewCollapsed = false;
 
     // Refinement order (labels + prompt sentences come from I18N)
     const REFINEMENTS = ['clarify', 'reasoning', 'uncertainty', 'alternatives'];
@@ -1311,24 +1325,17 @@
         document.getElementById('completion-text').textContent = fmt(t().completion, { f: filled, total });
     }
 
-    // F3 — toggle all fields visibility
+    // F3 — collapse-all view (hides textareas/hints in left panel, does not affect prompt output)
     function toggleAllFields() {
-        const allHidden = HIDEABLE_FIELDS.every(id => hiddenFields.has(id));
-        HIDEABLE_FIELDS.forEach(id => {
-            const nowHidden = !allHidden;
-            nowHidden ? hiddenFields.add(id) : hiddenFields.delete(id);
-            store.set(id + '_hidden', nowHidden ? 'true' : 'false');
-            applyHiddenState(id, nowHidden);
-        });
+        allFieldsViewCollapsed = !allFieldsViewCollapsed;
+        document.querySelector('.panel-scroll').classList.toggle('fields-view-collapsed', allFieldsViewCollapsed);
         updateToggleAllBtn();
-        updatePreview();
     }
 
     function updateToggleAllBtn() {
         const btn = document.getElementById('toggle-all-btn');
         if (!btn) return;
-        const allHidden = HIDEABLE_FIELDS.every(id => hiddenFields.has(id));
-        btn.textContent = allHidden ? t().showAll : t().hideAll;
+        btn.textContent = allFieldsViewCollapsed ? t().showAll : t().hideAll;
     }
 
     // F4 — export plain text (.txt)
