@@ -97,6 +97,15 @@
 
         label { font-weight: 700; color: var(--primary); font-size: 0.9rem; display: block; margin-bottom: 4px; }
 
+        .label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .label-row label { margin-bottom: 0; }
+        .badge-excluded {
+            display: inline-block; font-size: 0.68rem; font-weight: 600;
+            background: #fff3e0; color: #bf360c; border: 1px solid #ffcc80;
+            border-radius: 4px; padding: 1px 7px; letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
         .hint { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; display: block; line-height: 1.4; }
 
         .input-container { position: relative; margin-bottom: 28px; }
@@ -127,6 +136,18 @@
             padding: 16px 16px 4px 16px;
             margin-bottom: 28px;
         }
+        .reference-block.draft-collapsed { padding-bottom: 16px; }
+        .reference-block.draft-collapsed .hint,
+        .reference-block.draft-collapsed textarea { display: none; }
+        .draft-toggle-btn {
+            background: none; border: none; cursor: pointer; padding: 2px 5px;
+            color: var(--text-secondary); display: inline-flex; align-items: center;
+            margin-left: auto; border-radius: 4px; opacity: 0.55;
+            transition: color 0.15s, background 0.15s, opacity 0.15s;
+        }
+        .draft-toggle-btn:hover { opacity: 1; color: var(--primary); background: #dde3ea; }
+        .draft-toggle-btn svg { transition: transform 0.2s; }
+        .reference-block.draft-collapsed .draft-toggle-btn svg { transform: rotate(-90deg); }
 
         /* Fullscreen Mode */
         .fullscreen-btn {
@@ -239,14 +260,18 @@
             margin-top: 10px; font-family: 'Fira Code', monospace;
         }
 
-.example-toggle-btn {
-            width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--border);
-            background: transparent; color: var(--text-secondary); cursor: pointer;
-            font-size: 0.85rem; font-family: inherit; font-weight: 600;
-            transition: 0.2s; text-align: center;
+.optional-toggle-row {
+            display: flex; gap: 10px; margin: 4px 0 16px;
         }
-        .example-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: #f4f7f9; }
-        .example-toggle-btn.active { border-color: #b0bec5; color: #b0bec5; }
+        .example-toggle-btn {
+            flex: 1; padding: 12px 10px; border-radius: 8px; border: 1.5px dashed var(--border);
+            background: #fafbfc; color: var(--text-secondary); cursor: pointer;
+            font-size: 0.82rem; font-family: inherit; font-weight: 600;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+            text-align: center; line-height: 1.3;
+        }
+        .example-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f4f8; }
+        .example-toggle-btn.active { border-color: #b0bec5; color: #b0bec5; background: transparent; }
         .example-toggle-btn.active:hover { border-color: #e57373; color: #e57373; background: #fff5f5; }
 
         /* Optional refinements */
@@ -367,7 +392,13 @@
             <p style="margin: 0 0 0 0; padding: 10px 20px 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic;" data-i18n="optionalNote">All fields are optional — fill only what's useful, and hide the ones you don't need.</p>
             <div class="panel-scroll">
                 <div class="input-container reference-block">
-                    <label for="draft" data-i18n="fields.draft.label">Initial Request (for reference)</label>
+                    <div class="label-row">
+                        <label for="draft" data-i18n="fields.draft.label">Initial Request (for reference)</label>
+                        <span class="badge-excluded" data-i18n="fields.draft.badge">not included in prompt</span>
+                        <button class="draft-toggle-btn" id="draft-toggle-btn" onclick="toggleDraftCollapse()" aria-expanded="false" aria-controls="hint-draft draft">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                    </div>
                     <span id="hint-draft" class="hint" data-i18n="fields.draft.hint">No need to be precise — a rough idea is enough. The fields below will help you refine it. Example: "Write a report on school safety."</span>
                     <textarea id="draft" class="lazy-prompt" placeholder="Type or paste your initial idea here..."
                         data-i18n-ph="fields.draft.placeholder" aria-describedby="hint-draft"></textarea>
@@ -394,25 +425,6 @@
                     <button class="fullscreen-btn" id="fs-btn-persona" onclick="toggleFS('persona')" aria-label="Expand Persona/Role to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
-                <div class="input-container" id="container-context">
-                    <div class="field-header">
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
-                            <label for="context" data-i18n="fields.context.heading"># CONTEXT</label>
-                        </div>
-                        <button class="hide-toggle-btn" id="hide-btn-context" aria-pressed="false"
-                            aria-label="Hide Context from prompt"
-                            onclick="toggleHide('context')">
-                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        </button>
-                    </div>
-                    <span id="hint-context" class="hint" data-i18n="fields.context.hint">Relevant background (e.g., year group, subject, school type, specific situation or document you are working from).</span>
-                    <textarea id="context" placeholder="This task arises from..."
-                        data-i18n-ph="fields.context.placeholder" aria-describedby="hint-context"></textarea>
-                    <button class="fullscreen-btn" id="fs-btn-context" onclick="toggleFS('context')" aria-label="Expand Context to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
-                </div>
-
                 <div class="input-container" id="container-objective">
                     <div class="field-header">
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -430,6 +442,25 @@
                     <textarea id="objective" placeholder="The main goal is to..."
                         data-i18n-ph="fields.objective.placeholder" aria-describedby="hint-objective"></textarea>
                     <button class="fullscreen-btn" id="fs-btn-objective" onclick="toggleFS('objective')" aria-label="Expand Objective to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
+                </div>
+
+                <div class="input-container" id="container-context">
+                    <div class="field-header">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="context" data-i18n="fields.context.heading"># CONTEXT</label>
+                        </div>
+                        <button class="hide-toggle-btn" id="hide-btn-context" aria-pressed="false"
+                            aria-label="Hide Context from prompt"
+                            onclick="toggleHide('context')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-context" class="hint" data-i18n="fields.context.hint">Relevant background (e.g., year group, subject, school type, specific situation or document you are working from).</span>
+                    <textarea id="context" placeholder="This task arises from..."
+                        data-i18n-ph="fields.context.placeholder" aria-describedby="hint-context"></textarea>
+                    <button class="fullscreen-btn" id="fs-btn-context" onclick="toggleFS('context')" aria-label="Expand Context to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
                 <div class="input-container" id="container-audience">
@@ -470,26 +501,27 @@
                     <button class="fullscreen-btn" id="fs-btn-boundaries" onclick="toggleFS('boundaries')" aria-label="Expand Boundaries & Style to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
 
-                <div class="input-container" id="container-steps">
-                    <div class="field-header">
-                        <div style="display:flex;align-items:center;gap:6px;">
-                            <span class="drag-handle" title="Drag to reorder" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
-                            <label for="steps" data-i18n="fields.steps.heading"># STEPS / PROCESS</label>
-                        </div>
-                        <button class="hide-toggle-btn" id="hide-btn-steps" aria-pressed="false"
-                            aria-label="Hide Steps / Process from prompt"
-                            onclick="toggleHide('steps')">
-                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                        </button>
-                    </div>
+                <div id="bottom-anchor">
+                <hr aria-hidden="true">
+
+                <div class="optional-toggle-row">
+                    <button id="steps-toggle-btn" class="example-toggle-btn" onclick="toggleSteps()"
+                        aria-expanded="false" aria-controls="steps-container">
+                        + Add Steps / Process <span style="font-weight:400; opacity:0.7;">(optional)</span>
+                    </button>
+                    <button id="example-toggle-btn" class="example-toggle-btn" onclick="toggleExample()"
+                        aria-expanded="false" aria-controls="example-container">
+                        + Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>
+                    </button>
+                </div>
+
+                <div class="input-container" id="steps-container" style="display:none;">
+                    <label for="steps" data-i18n="fields.steps.heading"># STEPS / PROCESS</label>
                     <span id="hint-steps" class="hint" data-i18n="fields.steps.hint">The sequential steps the response should follow (e.g., 1. Summarise the situation. 2. Identify key issues. 3. Propose solutions.).</span>
                     <textarea id="steps" placeholder="Step 1: ..."
                         data-i18n-ph="fields.steps.placeholder" aria-describedby="hint-steps"></textarea>
                     <button class="fullscreen-btn" id="fs-btn-steps" onclick="toggleFS('steps')" aria-label="Expand Steps / Process to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
-
-                <hr aria-hidden="true">
 
                 <div class="input-container" id="example-container" style="display:none;">
                     <label for="example" data-i18n="fields.example.heading"># EXAMPLE</label>
@@ -498,11 +530,6 @@
                         data-i18n-ph="fields.example.placeholder" aria-describedby="hint-example"></textarea>
                     <button class="fullscreen-btn" id="fs-btn-example" onclick="toggleFS('example')" aria-label="Expand Example to fullscreen" data-i18n="fullscreenBtn">⛶ Fullscreen</button>
                 </div>
-                <button id="example-toggle-btn" class="example-toggle-btn" onclick="toggleExample()"
-                    aria-expanded="false" aria-controls="example-container">
-                    + Add Example <span style="font-weight:400; opacity:0.7;">(optional)</span>
-                </button>
-
                 <fieldset class="refinements">
                     <legend class="refinements-title"><span data-i18n="refinementsLegend">Optional refinements </span><span style="font-weight:400;" data-i18n="refinementsNote">— behaviours to add to the response</span></legend>
                     <label class="refinement-option">
@@ -522,6 +549,7 @@
                         <span data-i18n="refLabels.alternatives">Offer alternatives</span>
                     </label>
                 </fieldset>
+                </div><!-- #bottom-anchor -->
             </div>
         </section>
 
@@ -595,8 +623,9 @@
     const fields = ['draft', 'persona', 'context', 'objective', 'audience', 'boundaries', 'steps', 'example'];
 
     // Field order for the generated prompt (labels/headings come from I18N)
-    const HIDEABLE_FIELDS = ['persona', 'context', 'objective', 'audience', 'boundaries', 'steps'];
+    const HIDEABLE_FIELDS = ['persona', 'objective', 'context', 'audience', 'boundaries'];
     let fieldOrder = [...HIDEABLE_FIELDS]; // mutable; updated by drag-and-drop
+    let draftCollapsed = true;
 
     // Refinement order (labels + prompt sentences come from I18N)
     const REFINEMENTS = ['clarify', 'reasoning', 'uncertainty', 'alternatives'];
@@ -613,8 +642,8 @@
     // ---- Internationalisation (i18n) ----------------------------------------
     const I18N = {
         en: {
-            docTitle: `Simple Prompt Builder`,
-            appTitle: `Simple Prompt Builder`,
+            docTitle: `Prompt Builder`,
+            appTitle: `Prompt Builder`,
             tagline1: `Structure your thinking. Shape the output.`,
             tagline2: `Prompting is an intellectual process, more than a technical one.`,
             clearData: `Clear Data`,
@@ -630,6 +659,10 @@
             copyAria: `Copy prompt to clipboard`,
             exportMd: `Export .md`,
             exportAria: `Export prompt as Markdown file`,
+            addSteps: `+ Add Steps / Process `,
+            removeSteps: `− Remove Steps / Process`,
+            stepsShown: `Steps / Process section shown.`,
+            stepsHidden: `Steps / Process section hidden.`,
             addExample: `+ Add Example `,
             optionalSuffix: `(optional)`,
             removeExample: `− Remove Example`,
@@ -658,7 +691,7 @@
             resetConfirm: `Are you sure you want to clear all inputs? This cannot be undone.`,
             stats: `{w} words · {c} characters`,
             fields: {
-                draft:      { label: `Initial Request (for reference)`, hint: `No need to be precise — a rough idea is enough. The fields below will help you refine it. Example: "Write a report on school safety."`, placeholder: `Type or paste your initial idea here...` },
+                draft:      { label: `Initial Request (for reference)`, badge: `not included in prompt`, hint: `No need to be precise — a rough idea is enough. The fields below will help you refine it. Example: "Write a report on school safety."`, placeholder: `Type or paste your initial idea here...` },
                 persona:    { heading: `# PERSONA/ROLE`, label: `Persona/Role`, hint: `The role GenAI should take on (e.g., experienced primary school teacher, special needs coordinator, school administrator).`, placeholder: `Act as a...` },
                 context:    { heading: `# CONTEXT`, label: `Context`, hint: `Relevant background (e.g., year group, subject, school type, specific situation or document you are working from).`, placeholder: `This task arises from...` },
                 objective:  { heading: `# OBJECTIVE`, label: `Objective`, hint: `What you want GenAI to produce or do (e.g., draft a letter, summarise a report, create a lesson plan).`, placeholder: `The main goal is to...` },
@@ -681,8 +714,8 @@
             },
         },
         fr: {
-            docTitle: `Simple Prompt Builder`,
-            appTitle: `Simple Prompt Builder`,
+            docTitle: `Constructeur d'instructions`,
+            appTitle: `Constructeur d'instructions`,
             tagline1: `Structurez votre pensée. Façonnez le résultat.`,
             tagline2: `Le prompting est une démarche intellectuelle, plus que technique.`,
             clearData: `Effacer les données`,
@@ -698,6 +731,10 @@
             copyAria: `Copier le prompt dans le presse-papiers`,
             exportMd: `Exporter .md`,
             exportAria: `Exporter le prompt en fichier Markdown`,
+            addSteps: `+ Ajouter des étapes / processus `,
+            removeSteps: `− Retirer les étapes / processus`,
+            stepsShown: `Section Étapes / Processus affichée.`,
+            stepsHidden: `Section Étapes / Processus masquée.`,
             addExample: `+ Ajouter un exemple `,
             optionalSuffix: `(facultatif)`,
             removeExample: `− Retirer l'exemple`,
@@ -726,7 +763,7 @@
             resetConfirm: `Voulez-vous vraiment effacer toutes les saisies ? Cette action est irréversible.`,
             stats: `{w} mots · {c} caractères`,
             fields: {
-                draft:      { label: `Demande initiale (pour référence)`, hint: `Pas besoin d'être précis — une idée approximative suffit. Les champs ci-dessous vous aideront à l'affiner. Exemple : « Rédiger un rapport sur la sécurité à l'école ».`, placeholder: `Saisissez ou collez votre idée initiale ici...` },
+                draft:      { label: `Demande initiale (pour référence)`, badge: `non inclus dans le prompt`, hint: `Ce champ ne fait PAS partie du prompt généré — il sert uniquement à vous aider à formuler votre idée. Pas besoin d'être précis, une ébauche suffit. Les champs ci-dessous vous aideront à l'affiner. Exemple : « Rédiger un rapport sur la sécurité à l'école ».`, placeholder: `Saisissez ou collez votre idée initiale ici...` },
                 persona:    { heading: `# PERSONA/RÔLE`, label: `Persona/Rôle`, hint: `Le rôle que l'IA générative doit adopter (p. ex. enseignant·e expérimenté·e du primaire, coordinateur·rice des besoins spécifiques, personnel de direction).`, placeholder: `Agis en tant que...` },
                 context:    { heading: `# CONTEXTE`, label: `Contexte`, hint: `Les éléments de contexte utiles (p. ex. niveau ou classe, matière, type d'école, situation ou document de référence).`, placeholder: `Cette tâche s'inscrit dans...` },
                 objective:  { heading: `# OBJECTIF`, label: `Objectif`, hint: `Ce que vous voulez que l'IA produise ou fasse (p. ex. rédiger une lettre, résumer un rapport, créer une séquence pédagogique).`, placeholder: `L'objectif principal est de...` },
@@ -742,10 +779,10 @@
                 alternatives: `Proposer des alternatives`,
             },
             refTexts: {
-                clarify: `Avant de répondre, posez-moi les questions de clarification nécessaires.`,
-                reasoning: `Expliquez le raisonnement qui sous-tend votre réponse.`,
-                uncertainty: `Indiquez les points incertains ou dont la fiabilité n'est pas garantie.`,
-                alternatives: `Le cas échéant, proposez plusieurs options.`,
+                clarify: `Avant de répondre, pose-moi les questions de clarification nécessaires.`,
+                reasoning: `Explique le raisonnement qui sous-tend ta réponse.`,
+                uncertainty: `Indique les points incertains ou dont la fiabilité n'est pas garantie.`,
+                alternatives: `Le cas échéant, propose plusieurs options.`,
             },
         },
     };
@@ -771,6 +808,24 @@
         } else {
             btn.textContent = '';
             btn.appendChild(document.createTextNode(t().addExample));
+            const span = document.createElement('span');
+            span.style.fontWeight = '400';
+            span.style.opacity = '0.7';
+            span.textContent = t().optionalSuffix;
+            btn.appendChild(span);
+            btn.classList.remove('active');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function setStepsBtnLabel(btn, isVisible) {
+        if (isVisible) {
+            btn.textContent = t().removeSteps;
+            btn.classList.add('active');
+            btn.setAttribute('aria-expanded', 'true');
+        } else {
+            btn.textContent = '';
+            btn.appendChild(document.createTextNode(t().addSteps));
             const span = document.createElement('span');
             span.style.fontWeight = '400';
             span.style.opacity = '0.7';
@@ -810,6 +865,10 @@
         HIDEABLE_FIELDS.forEach(id => applyHiddenState(id, hiddenFields.has(id)));
 
         // Example toggle reflects current visibility
+        const stBtn = document.getElementById('steps-toggle-btn');
+        const stVisible = document.getElementById('steps-container').style.display !== 'none';
+        setStepsBtnLabel(stBtn, stVisible);
+
         const exBtn = document.getElementById('example-toggle-btn');
         const exVisible = document.getElementById('example-container').style.display !== 'none';
         setExampleBtnLabel(exBtn, exVisible);
@@ -867,6 +926,11 @@
             }
         });
 
+        // Restore steps visibility (button label applied by applyLanguage)
+        if (store.get('steps_visible') === 'true') {
+            document.getElementById('steps-container').style.display = 'block';
+        }
+
         // Restore example visibility (button label applied by applyLanguage)
         if (store.get('example_visible') === 'true') {
             document.getElementById('example-container').style.display = 'block';
@@ -879,17 +943,27 @@
             }
         });
 
-        // Restore field order
+        // Restore field order — discard saved order if the developer changed the default
+        const defaultFingerprint = HIDEABLE_FIELDS.join(',');
         const savedOrder = store.get('field_order');
-        if (savedOrder) {
+        const storedFingerprint = store.get('field_order_default');
+        if (savedOrder && storedFingerprint === defaultFingerprint) {
             const parsed = savedOrder.split(',').filter(id => HIDEABLE_FIELDS.includes(id));
             if (parsed.length === HIDEABLE_FIELDS.length) {
                 fieldOrder = parsed;
                 const orderParent = document.getElementById('container-persona').parentNode;
-                fieldOrder.forEach(id => orderParent.appendChild(document.getElementById('container-' + id)));
+                const bottomAnchor = document.getElementById('bottom-anchor');
+                fieldOrder.forEach(id => orderParent.insertBefore(document.getElementById('container-' + id), bottomAnchor));
             }
+        } else {
+            store.remove('field_order');
+            store.set('field_order_default', defaultFingerprint);
         }
         initDragAndDrop();
+
+        // Restore draft collapse state (collapsed by default)
+        draftCollapsed = store.get('draft_collapsed') !== 'false';
+        applyDraftCollapse();
 
         applyLanguage(); // sets all text + composed labels, then calls updatePreview()
     };
@@ -901,6 +975,17 @@
         btn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
         const label = t().fields[id].label;
         btn.setAttribute('aria-label', isHidden ? fmt(t().show, { f: label }) : fmt(t().hide, { f: label }));
+    }
+
+    function applyDraftCollapse() {
+        document.querySelector('.reference-block').classList.toggle('draft-collapsed', draftCollapsed);
+        document.getElementById('draft-toggle-btn').setAttribute('aria-expanded', draftCollapsed ? 'false' : 'true');
+    }
+
+    function toggleDraftCollapse() {
+        draftCollapsed = !draftCollapsed;
+        store.set('draft_collapsed', draftCollapsed ? 'true' : 'false');
+        applyDraftCollapse();
     }
 
     function toggleHide(id) {
@@ -929,6 +1014,13 @@
                 const val = document.getElementById(id).value || fmt(dict.notDefined, { f: heading.slice(2) });
                 return heading + '\n' + val;
             });
+
+        const stepsVisible = document.getElementById('steps-container').style.display !== 'none';
+        if (stepsVisible) {
+            const heading = dict.fields.steps.heading;
+            const s = document.getElementById('steps').value || fmt(dict.notDefined, { f: heading.slice(2) });
+            segments.push(heading + '\n' + s);
+        }
 
         const exampleVisible = document.getElementById('example-container').style.display !== 'none';
         if (exampleVisible) {
@@ -1006,6 +1098,25 @@
             el.focus(); // return focus to the field so keyboard focus is not lost
             announce(t().fsLeave);
         }
+    }
+
+    function toggleSteps() {
+        const container = document.getElementById('steps-container');
+        const btn = document.getElementById('steps-toggle-btn');
+        const isVisible = container.style.display !== 'none';
+        if (isVisible) {
+            container.style.display = 'none';
+            setStepsBtnLabel(btn, false);
+            store.set('steps_visible', 'false');
+            announce(t().stepsHidden);
+        } else {
+            container.style.display = 'block';
+            setStepsBtnLabel(btn, true);
+            store.set('steps_visible', 'true');
+            document.getElementById('steps').focus();
+            announce(t().stepsShown);
+        }
+        updatePreview();
     }
 
     function toggleExample() {
@@ -1182,6 +1293,9 @@
                 store.remove(id + '_hidden');
                 applyHiddenState(id, false);
             });
+            document.getElementById('steps-container').style.display = 'none';
+            setStepsBtnLabel(document.getElementById('steps-toggle-btn'), false);
+            store.remove('steps_visible');
             document.getElementById('example-container').style.display = 'none';
             setExampleBtnLabel(document.getElementById('example-toggle-btn'), false);
             store.remove('example_visible');
@@ -1193,7 +1307,8 @@
             store.remove('field_order');
             fieldOrder = [...HIDEABLE_FIELDS];
             const resetParent = document.getElementById('container-persona').parentNode;
-            HIDEABLE_FIELDS.forEach(id => resetParent.appendChild(document.getElementById('container-' + id)));
+            const resetAnchor = document.getElementById('bottom-anchor');
+            HIDEABLE_FIELDS.forEach(id => resetParent.insertBefore(document.getElementById('container-' + id), resetAnchor));
             updatePreview();
         }
     }
