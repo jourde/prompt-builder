@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constructeur d'instructions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #37474f; /* Deep Grey 800 */
+            --accent: #263238;
+            --bg: #f4f7f9;
+            --surface: #ffffff;
+            --border: #cfd8dc;
+            --radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --text-main: #1c1b1f;
+            --text-secondary: #546e7a; /* darkened from #607d8b for WCAG AA contrast */
+            --focus-ring: 0 0 0 3px #fff, 0 0 0 5px #37474f; /* high-contrast 2-layer focus ring */
+        }
+
+        /* Skip to main content link (WCAG 2.4.1) */
+        .skip-link {
+            position: absolute; top: -100px; left: 1rem; z-index: 99999;
+            background: var(--primary); color: #fff; padding: 10px 18px;
+            border-radius: 0 0 8px 8px; font-weight: 700; text-decoration: none;
+            font-size: 0.9rem; transition: top 0.2s;
+        }
+        .skip-link:focus { top: 0; }
+
+        body, html {
+            height: 100%; margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+        }
+
+        .app-wrapper {
+            display: flex; flex-direction: column; height: 100vh;
+        }
+
+        header {
+            background: var(--primary); color: white;
+            padding: 1rem 2.5rem; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow);
+        }
+
+        /* Header right-hand controls */
+        .header-actions { display: flex; align-items: center; gap: 14px; }
+        .header-actions .btn { flex: 0 0 auto; }
+
+        .main-content {
+            display: flex; flex: 1; overflow: hidden; padding: 25px; gap: 25px;
+        }
+
+        /* Unified Panel Styles */
+        .editor-panel, .preview-panel {
+            flex: 1; display: flex; flex-direction: column;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .panel-scroll {
+            flex: 1; overflow-y: auto; padding: 25px;
+        }
+
+        .panel-header {
+            background: #fafafa;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
+            color: var(--primary);
+        }
+
+        /* Form Styling */
+        .field-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;
+        }
+
+        label { font-weight: 700; color: var(--primary); font-size: 0.9rem; display: block; margin-bottom: 4px; }
+
+        .label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .label-row label { margin-bottom: 0; }
+        .badge-excluded {
+            display: inline-block; font-size: 0.68rem; font-weight: 600;
+            background: #fff3e0; color: #bf360c; border: 1px solid #ffcc80;
+            border-radius: 4px; padding: 1px 7px; letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+
+        .hint { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; display: block; line-height: 1.4; }
+
+        .input-container { position: relative; margin-bottom: 28px; }
+
+        textarea {
+            width: 100%; border: 1px solid var(--border); border-radius: 8px;
+            padding: 14px 14px 42px 14px; font-size: 1rem; font-family: inherit;
+            resize: vertical; min-height: 90px; box-sizing: border-box;
+            transition: all 0.2s; background-color: #fff;
+        }
+
+        textarea:focus { outline: none; border: 2px solid var(--primary); box-shadow: 0 0 0 4px rgba(55, 71, 79, 0.15); }
+
+        /* Visible focus ring for all interactive elements (WCAG 2.4.7, 2.4.11) */
+        :focus-visible {
+            outline: 3px solid var(--primary);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        button:focus-visible, a:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+
+        .lazy-prompt { background-color: #fdfdfd; border: 1px dashed var(--border); }
+
+        /* Collapse-all view: hide textareas/hints, keep titles */
+        .fields-view-collapsed .input-container .hint,
+        .fields-view-collapsed .input-container textarea,
+        .fields-view-collapsed .input-container .fullscreen-btn,
+        .fields-view-collapsed #steps-container .hint,
+        .fields-view-collapsed #steps-container textarea,
+        .fields-view-collapsed #example-container .hint,
+        .fields-view-collapsed #example-container textarea { display: none; }
+        .fields-view-collapsed .input-container { margin-bottom: 8px; }
+
+        /* Fullscreen Mode */
+        .fullscreen-btn {
+            position: absolute; bottom: 10px; right: 10px; z-index: 10;
+            background: #eceff1; border: none; cursor: pointer; color: var(--primary);
+            padding: 5px 10px; border-radius: 6px; display: flex; align-items: center; gap: 5px;
+            font-size: 0.75rem; font-weight: 600; font-family: inherit;
+            transition: 0.2s; letter-spacing: 0.3px;
+            /* Always visible for keyboard users; subtler visually at rest */
+            opacity: 0.8;
+        }
+        /* Show fully on hover OR focus (keyboard nav) */
+        .input-container:hover .fullscreen-btn,
+        .fullscreen-btn:focus-visible { opacity: 1; }
+        .fullscreen-btn:hover { background: #cfd8dc; transform: translateY(-1px); opacity: 1; }
+
+        /* Hide-from-prompt toggle button */
+        .hide-toggle-btn {
+            background: none; border: none; cursor: pointer;
+            padding: 2px 6px; border-radius: 4px;
+            color: var(--text-secondary); line-height: 1;
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 0.8rem; font-family: inherit; font-weight: 600;
+            transition: color 0.15s, background 0.15s; opacity: 0.6;
+        }
+        .hide-toggle-btn:hover { opacity: 1; color: var(--primary); background: #eceff1; }
+        .hide-toggle-btn[aria-pressed="true"] { color: #b0bec5; opacity: 1; }
+        .hide-toggle-btn[aria-pressed="true"]:hover { color: #e57373; background: #fff5f5; }
+        .hide-toggle-btn .icon-eye-open  { display: inline-block; }
+        .hide-toggle-btn .icon-eye-slash { display: none; }
+        .hide-toggle-btn[aria-pressed="true"] .icon-eye-open  { display: none; }
+        .hide-toggle-btn[aria-pressed="true"] .icon-eye-slash { display: inline-block; }
+
+        /* Hidden field state */
+        .input-container.field-hidden textarea {
+            opacity: 0.45; border-style: dashed;
+            background-color: #f4f7f9; color: var(--text-secondary);
+        }
+        .input-container.field-hidden > .field-header > label {
+            text-decoration: line-through; color: var(--text-secondary);
+        }
+
+        /* Override label margin when inside flex field-header */
+        .field-header label { margin-bottom: 0; }
+
+        /* Drag-and-drop field reordering */
+        .drag-handle {
+            cursor: grab; color: var(--text-secondary); opacity: 0.4;
+            padding: 2px 4px; border-radius: 3px; user-select: none;
+            display: inline-flex; align-items: center; flex-shrink: 0;
+        }
+        .drag-handle:hover { opacity: 1; color: var(--primary); background: #eceff1; }
+        .drag-handle:active { cursor: grabbing; }
+        .input-container.dragging { opacity: 0.3; }
+        .input-container.drag-over { box-shadow: 0 -3px 0 0 var(--primary); }
+
+        textarea.fullscreen-active {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9999; border-radius: 0; padding: 50px; font-size: 1.25rem;
+            background: white; line-height: 1.6;
+        }
+
+        .fs-exit-btn {
+            position: fixed; top: 18px; right: 24px; z-index: 10000;
+            background: var(--primary); color: white; border: none; cursor: pointer;
+            padding: 10px 18px; border-radius: 8px; font-size: 0.9rem; font-weight: 700;
+            font-family: inherit; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        .fs-exit-btn:hover { background: var(--accent); transform: translateY(-1px); }
+
+        /* Live Preview Styling */
+        .preview-body {
+            font-family: 'Fira Code', monospace;
+            font-size: 1rem;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            color: #334155;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .tag-h1 { color: #e65100; font-weight: bold; border-bottom: 2px solid #ffccbc; padding-bottom: 2px; }
+
+        /* Actions */
+        .actions { display: flex; gap: 12px; padding: 20px 25px; background: #fafafa; border-top: 1px solid var(--border); }
+
+        .btn {
+            flex: 1; padding: 14px; border-radius: 8px; border: none;
+            font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .btn-copy { background: var(--primary); color: white; }
+        .btn-download { background: #546e7a; color: white; }
+        .btn-reset { background: transparent; color: #ef9a9a; border: 1px solid #ef9a9a; flex: 0.4; }
+
+        .btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .btn-reset:hover { background: rgba(239,154,154,0.15); border-color: #e57373; color: #e57373; filter: none; transform: translateY(-1px); }
+
+        #save-status { font-weight: 400; text-transform: none; color: #2e7d32; font-size: 0.75rem; } /* darkened green for WCAG AA on #fafafa */
+
+        hr { border: 0; border-top: 1px solid #eceff1; margin: 35px 0; }
+
+        /* Prompt stats counter */
+        .prompt-stats {
+            text-align: right; font-size: 0.78rem; color: var(--text-secondary);
+            margin-top: 10px; font-family: 'Fira Code', monospace;
+        }
+
+        .optional-toggle-row {
+            display: flex; gap: 10px; margin: 4px 0 16px;
+        }
+        .example-toggle-btn {
+            flex: 1; padding: 12px 10px; border-radius: 8px; border: 1.5px dashed var(--border);
+            background: #fafbfc; color: var(--text-secondary); cursor: pointer;
+            font-size: 0.82rem; font-family: inherit; font-weight: 600;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+            text-align: center; line-height: 1.3;
+        }
+        .example-toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f4f8; }
+        .example-toggle-btn.active { border-color: #b0bec5; color: #b0bec5; background: transparent; }
+        .example-toggle-btn.active:hover { border-color: #e57373; color: #e57373; background: #fff5f5; }
+
+        /* Optional refinements */
+        .refinements {
+            margin-top: 18px; padding: 14px 16px;
+            border: 1px solid var(--border); border-radius: 10px; background: #f8fafb;
+        }
+        .refinements-title {
+            font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);
+            margin-bottom: 8px; display: block;
+        }
+        .refinement-option {
+            display: flex; align-items: flex-start; gap: 8px;
+            font-size: 0.85rem; color: var(--text-main); cursor: pointer;
+            padding: 5px 0; line-height: 1.35;
+        }
+        .refinement-option input {
+            margin-top: 2px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0;
+        }
+
+        /* Footer */
+        .app-footer {
+            background: var(--primary); color: rgba(255,255,255,0.85);
+            padding: 8px 2.5rem; display: flex; justify-content: flex-end; align-items: center;
+            font-size: 0.75rem;
+        }
+        .footer-credit { color: rgba(255,255,255,0.85); font-size: 0.75rem; }
+        .footer-credit a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: underline; text-underline-offset: 2px; transition: 0.2s;
+        }
+        .footer-credit a:hover { color: white; }
+
+        @media (max-width: 900px) {
+            .main-content { flex-direction: column; overflow-y: auto; }
+            .editor-panel, .preview-panel { min-height: 600px; }
+        }
+
+        /* Respect users who prefer reduced motion (WCAG 2.3.3) */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+                scroll-behavior: auto !important;
+            }
+            .btn:hover, .btn-reset:hover, .fullscreen-btn:hover, .fs-exit-btn:hover { transform: none !important; }
+        }
+
+        /* Completion indicator */
+        .completion-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 20px 2px;
+        }
+        .completion-bar {
+            flex: 1; height: 5px; background: #dde3e8; border-radius: 3px; overflow: hidden;
+        }
+        .completion-fill {
+            height: 100%; background: var(--primary); border-radius: 3px;
+            transition: width 0.3s ease; width: 0%;
+        }
+        .completion-text {
+            font-size: 0.72rem; color: var(--text-secondary); white-space: nowrap;
+        }
+
+        /* Collapse-all toggle button */
+        .toggle-all-btn {
+            background: none; border: 1px solid var(--border); border-radius: 6px;
+            color: var(--text-secondary); cursor: pointer; font-size: 0.72rem; font-family: inherit;
+            padding: 3px 9px; font-weight: 600; transition: 0.15s; white-space: nowrap;
+        }
+        .toggle-all-btn:hover { border-color: var(--primary); color: var(--primary); background: #f0f4f8; }
+
+        /* Word count warning thresholds */
+        .prompt-stats.stats-warning { color: #bf5000; }
+        .prompt-stats.stats-danger  { color: #b71c1c; font-weight: 700; }
+
+        /* App title and tagline in header */
+        .app-title   { margin: 0; font-size: 1.5rem; letter-spacing: -0.5px; }
+        .app-tagline { font-size: 0.85rem; opacity: 0.9; }
+
+        /* Flex wrapper for drag handle + label inside field headers */
+        .field-label-group { display: flex; align-items: center; gap: 6px; }
+
+        /* "(optional)" suffix inside section toggle buttons */
+        .optional-suffix { font-weight: 400; opacity: 0.7; }
+
+        /* Instructional note below the editor panel header */
+        .panel-note { margin: 0; padding: 6px 20px 0; font-size: 0.8rem; color: var(--text-secondary); font-style: italic; }
+
+        /* Preview panel scroll area background */
+        .preview-panel .panel-scroll { background-color: #fcfcfc; }
+    </style>
+</head>
+<body>
+
+<!-- Skip to main content (WCAG 2.4.1) -->
+<a class="skip-link" href="#main-content" data-i18n="skip">Aller au contenu principal</a>
+
+<div class="app-wrapper">
+    <header role="banner">
+        <div>
+            <h1 class="app-title" data-i18n="appTitle">Constructeur d'instructions</h1>
+            <span class="app-tagline"><span data-i18n="tagline1">Structurez votre pensée. Façonnez le résultat.</span><br><em data-i18n="tagline2">Le prompting est une démarche intellectuelle, plus que technique.</em></span>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="btn btn-reset" onclick="resetForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                <span data-i18n="clearData">Effacer les données</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- aria-live region for status announcements (WCAG 4.1.3) -->
+    <div id="a11y-announce" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
+
+    <main id="main-content" class="main-content">
+        <section class="editor-panel" aria-label="Zone de saisie du prompt">
+            <div class="panel-header" aria-hidden="true" data-i18n="inputBuilder">Zone de saisie</div>
+            <div class="completion-row">
+                <div class="completion-bar"><div class="completion-fill" id="completion-fill"></div></div>
+                <span class="completion-text" id="completion-text"></span>
+                <button type="button" class="toggle-all-btn" id="toggle-all-btn" onclick="toggleAllFields()" data-i18n="hideAll">Tout replier</button>
+            </div>
+            <p class="panel-note" data-i18n="optionalNote">Tous les champs sont facultatifs — ne remplissez que ce qui est utile et masquez ceux dont vous n'avez pas besoin.</p>
+            <div class="panel-scroll">
+
+                <div class="input-container" id="container-persona">
+                    <div class="field-header">
+                        <div class="field-label-group">
+                            <span class="drag-handle" title="Glisser pour réordonner" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="persona" data-i18n="fields.persona.heading"># RÔLE</label>
+                        </div>
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-persona" aria-pressed="false"
+                            aria-label="Masquer Rôle du prompt"
+                            onclick="toggleHide('persona')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-persona" class="hint" data-i18n="fields.persona.hint">Le rôle que l'IA générative doit adopter (p. ex. enseignant·e expérimenté·e du primaire, coordinateur·rice des besoins spécifiques, personnel de direction).</span>
+                    <textarea id="persona" placeholder="Agis en tant que..."
+                        data-i18n-ph="fields.persona.placeholder" aria-describedby="hint-persona"></textarea>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-persona" onclick="toggleFS('persona')" aria-label="Agrandir Rôle en plein écran" data-i18n="fullscreenBtn">⛶ Plein écran</button>
+                </div>
+
+                <div class="input-container" id="container-objective">
+                    <div class="field-header">
+                        <div class="field-label-group">
+                            <span class="drag-handle" title="Glisser pour réordonner" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="objective" data-i18n="fields.objective.heading"># OBJECTIF</label>
+                        </div>
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-objective" aria-pressed="false"
+                            aria-label="Masquer Objectif du prompt"
+                            onclick="toggleHide('objective')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-objective" class="hint" data-i18n="fields.objective.hint">Ce que vous voulez que l'IA produise ou fasse (p. ex. rédiger une lettre, résumer un rapport, créer une séquence pédagogique).</span>
+                    <textarea id="objective" placeholder="L'objectif principal est de..."
+                        data-i18n-ph="fields.objective.placeholder" aria-describedby="hint-objective"></textarea>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-objective" onclick="toggleFS('objective')" aria-label="Agrandir Objectif en plein écran" data-i18n="fullscreenBtn">⛶ Plein écran</button>
+                </div>
+
+                <div class="input-container" id="container-context">
+                    <div class="field-header">
+                        <div class="field-label-group">
+                            <span class="drag-handle" title="Glisser pour réordonner" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="context" data-i18n="fields.context.heading"># CONTEXTE</label>
+                        </div>
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-context" aria-pressed="false"
+                            aria-label="Masquer Contexte du prompt"
+                            onclick="toggleHide('context')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-context" class="hint" data-i18n="fields.context.hint">Les éléments de contexte utiles (p. ex. niveau ou classe, matière, type d'école, situation ou document de référence).</span>
+                    <textarea id="context" placeholder="Cette tâche s'inscrit dans..."
+                        data-i18n-ph="fields.context.placeholder" aria-describedby="hint-context"></textarea>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-context" onclick="toggleFS('context')" aria-label="Agrandir Contexte en plein écran" data-i18n="fullscreenBtn">⛶ Plein écran</button>
+                </div>
+
+                <div class="input-container" id="container-audience">
+                    <div class="field-header">
+                        <div class="field-label-group">
+                            <span class="drag-handle" title="Glisser pour réordonner" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="audience" data-i18n="fields.audience.heading"># PUBLIC CIBLE</label>
+                        </div>
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-audience" aria-pressed="false"
+                            aria-label="Masquer Public cible du prompt"
+                            onclick="toggleHide('audience')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-audience" class="hint" data-i18n="fields.audience.hint">Les personnes qui liront ou utiliseront le résultat (p. ex. parents, élèves de 10-11 ans, personnel enseignant, direction).</span>
+                    <textarea id="audience" placeholder="Le public cible est..."
+                        data-i18n-ph="fields.audience.placeholder" aria-describedby="hint-audience"></textarea>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-audience" onclick="toggleFS('audience')" aria-label="Agrandir Public cible en plein écran" data-i18n="fullscreenBtn">⛶ Plein écran</button>
+                </div>
+
+                <div class="input-container" id="container-boundaries">
+                    <div class="field-header">
+                        <div class="field-label-group">
+                            <span class="drag-handle" title="Glisser pour réordonner" aria-hidden="true"><svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2" r="1.5"/><circle cx="7" cy="2" r="1.5"/><circle cx="3" cy="7" r="1.5"/><circle cx="7" cy="7" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="7" cy="12" r="1.5"/></svg></span>
+                            <label for="boundaries" data-i18n="fields.boundaries.heading"># CONTRAINTES & STYLE</label>
+                        </div>
+                        <button type="button" class="hide-toggle-btn" id="hide-btn-boundaries" aria-pressed="false"
+                            aria-label="Masquer Contraintes &amp; Style du prompt"
+                            onclick="toggleHide('boundaries')">
+                            <svg class="icon-eye-open" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            <svg class="icon-eye-slash" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                        </button>
+                    </div>
+                    <span id="hint-boundaries" class="hint" data-i18n="fields.boundaries.hint">Ton, format, longueur ou éléments à éviter (p. ex. langage clair, listes à puces, une page maximum, sans jargon).</span>
+                    <textarea id="boundaries" placeholder="Veillez à ce que la réponse soit..."
+                        data-i18n-ph="fields.boundaries.placeholder" aria-describedby="hint-boundaries"></textarea>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-boundaries" onclick="toggleFS('boundaries')" aria-label="Agrandir Contraintes & Style en plein écran" data-i18n="fullscreenBtn">⛶ Plein écran</button>
+                </div>
+
+                <div id="bottom-anchor">
+                <hr aria-hidden="true">
+
+                <div class="optional-toggle-row">
+                    <button type="button" id="steps-toggle-btn" class="example-toggle-btn" onclick="toggleOptionalSection('steps')"
+                        aria-expanded="false" aria-controls="steps-container">
+                        + Ajouter des étapes / processus <span class="optional-suffix">(facultatif)</span>
+                    </button>
+                    <button type="button" id="example-toggle-btn" class="example-toggle-btn" onclick="toggleOptionalSection('example')"
+                        aria-expanded="false" aria-controls="example-container">
+                        + Ajouter un exemple <span class="optional-suffix">(facultatif)</span>
+                    </button>
+                </div>
+
+                <div class="input-container" id="steps-container" style="display:none;">
+                    <label for="steps" data-i18n="fields.steps.heading"># ÉTAPES / PROCESSUS</label>
+                    <span id="hint-steps" class="hint" data-i18n="fields.steps.hint">Les étapes successives que la réponse doit suivre (p. ex. 1. Résumer la situation. 2. Identifier les points clés. 3. Proposer des solutions.).</span>
+                    <textarea id="steps" placeholder="Étape 1 : ..."
+                        data-i18n-ph="fields.steps.placeholder" aria-describedby="hint-steps"></textarea>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-steps" onclick="toggleFS('steps')" aria-label="Agrandir Étapes / Processus en plein écran" data-i18n="fullscreenBtn">⛶ Plein écran</button>
+                </div>
+
+                <div class="input-container" id="example-container" style="display:none;">
+                    <label for="example" data-i18n="fields.example.heading"># EXEMPLE</label>
+                    <span id="hint-example" class="hint" data-i18n="fields.example.hint">Un exemple du type de résultat attendu — utile pour le ton, la structure ou le niveau de détail.</span>
+                    <textarea id="example" placeholder="Par exemple..."
+                        data-i18n-ph="fields.example.placeholder" aria-describedby="hint-example"></textarea>
+                    <button type="button" class="fullscreen-btn" id="fs-btn-example" onclick="toggleFS('example')" aria-label="Agrandir Exemple en plein écran" data-i18n="fullscreenBtn">⛶ Plein écran</button>
+                </div>
+                <fieldset class="refinements">
+                    <legend class="refinements-title"><span data-i18n="refinementsLegend">Affinements facultatifs </span><span style="font-weight:400;" data-i18n="refinementsNote">— comportements à ajouter à la réponse</span></legend>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-clarify" onchange="onRefinementChange('clarify')">
+                        <span data-i18n="refLabels.clarify">Me poser d'abord des questions de clarification</span>
+                    </label>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-reasoning" onchange="onRefinementChange('reasoning')">
+                        <span data-i18n="refLabels.reasoning">Explique ton raisonnement avant de produire la réponses complète</span>
+                    </label>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-uncertainty" onchange="onRefinementChange('uncertainty')">
+                        <span data-i18n="refLabels.uncertainty">Signaler les incertitudes</span>
+                    </label>
+                    <label class="refinement-option">
+                        <input type="checkbox" id="ref-alternatives" onchange="onRefinementChange('alternatives')">
+                        <span data-i18n="refLabels.alternatives">Proposer des alternatives</span>
+                    </label>
+                </fieldset>
+                </div><!-- #bottom-anchor -->
+            </div>
+        </section>
+
+        <section class="preview-panel" aria-label="Aperçu du prompt en direct">
+            <div class="panel-header">
+                <span data-i18n="previewTitle">Aperçu du prompt en direct</span>
+                <span id="save-status" aria-live="polite" aria-atomic="true">Enregistré</span>
+            </div>
+            <div class="panel-scroll">
+                <div id="preview-body" class="preview-body" role="region" aria-label="Prompt généré" tabindex="0"></div>
+                <div id="prompt-stats" class="prompt-stats"></div>
+            </div>
+            <div class="actions">
+                <button type="button" class="btn btn-copy" onclick="copyToClipboard()" title="Copier dans le presse-papiers (Ctrl+Maj+C / ⌘⇧C)"
+                    aria-label="Copier le prompt dans le presse-papiers" data-i18n="copy" data-i18n-aria="copyAria">Copier dans le presse-papiers</button>
+                <button type="button" class="btn btn-download" onclick="downloadPrompt()"
+                    aria-label="Exporter le prompt en fichier Markdown" data-i18n="exportMd" data-i18n-aria="exportAria">Exporter .md</button>
+                <button type="button" class="btn btn-download" onclick="downloadPlainText()"
+                    aria-label="Exporter le prompt en fichier texte brut" data-i18n="exportTxt" data-i18n-aria="exportTxtAria">Exporter .txt</button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <span class="footer-credit"><a href="https://jourde.dev" target="_blank" rel="noopener">François Jourde</a> - CC BY SA - 2026</span>
+    </footer>
+</div>
+
+<script>
+    const fields = ['persona', 'context', 'objective', 'audience', 'boundaries', 'steps', 'example'];
+
+    // Field order for the generated prompt (labels/headings come from I18N)
+    const HIDEABLE_FIELDS = ['persona', 'objective', 'context', 'audience', 'boundaries'];
+    let fieldOrder = [...HIDEABLE_FIELDS]; // mutable; updated by drag-and-drop
+    let allFieldsViewCollapsed = false;
+
+    // Refinement order (labels + prompt sentences come from I18N)
+    const REFINEMENTS = ['clarify', 'reasoning', 'uncertainty', 'alternatives'];
+
+    // Persistence helper. The 'igec_en_' prefix is kept verbatim for backward
+    // compatibility with data already saved in users' browsers (it is not language-specific).
+    const STORE_PREFIX = 'igec_en_';
+    const store = {
+        get:    (key) => localStorage.getItem(STORE_PREFIX + key),
+        set:    (key, value) => localStorage.setItem(STORE_PREFIX + key, value),
+        remove: (key) => localStorage.removeItem(STORE_PREFIX + key),
+    };
+
+    // ---- Internationalisation (i18n) ----------------------------------------
+    const I18N = {
+        fr: {
+            docTitle: `Constructeur d'instructions`,
+            appTitle: `Constructeur d'instructions`,
+            tagline1: `Structurez votre pensée. Façonnez le résultat.`,
+            tagline2: `Le prompting est une démarche intellectuelle, plus que technique.`,
+            clearData: `Effacer les données`,
+            skip: `Aller au contenu principal`,
+            inputBuilder: `Zone de saisie`,
+            optionalNote: `Tous les champs sont facultatifs — ne remplissez que ce qui est utile et masquez ceux dont vous n'avez pas besoin.`,
+            previewTitle: `Aperçu du prompt en direct`,
+            saved: `Enregistré`,
+            syncing: `Enregistrement...`,
+            savedToBrowser: `Enregistré dans le navigateur`,
+            copy: `Copier dans le presse-papiers`,
+            copied: `✓ Copié !`,
+            copyAria: `Copier le prompt dans le presse-papiers`,
+            exportMd: `Exporter .md`,
+            exportAria: `Exporter le prompt en fichier Markdown`,
+            exportTxt: `Exporter .txt`,
+            exportTxtAria: `Exporter le prompt en fichier texte brut`,
+            completion: `{f} / {total} remplis`,
+            hideAll: `Tout replier`,
+            showAll: `Tout déplier`,
+            addSteps: `+ Ajouter des étapes / processus `,
+            removeSteps: `− Retirer les étapes / processus`,
+            stepsShown: `Section Étapes / Processus affichée.`,
+            stepsHidden: `Section Étapes / Processus masquée.`,
+            addExample: `+ Ajouter un exemple `,
+            optionalSuffix: `(facultatif)`,
+            removeExample: `− Retirer l'exemple`,
+            refinementsLegend: `Affinements facultatifs `,
+            refinementsNote: `— comportements à ajouter à la réponse`,
+            additionalInstructions: `# INSTRUCTIONS COMPLÉMENTAIRES`,
+            notDefined: `({f} — à compléter)`,
+            fullscreenBtn: `⛶ Plein écran`,
+            fsAria: `Agrandir {f} en plein écran`,
+            hide: `Masquer {f} du prompt`,
+            show: `Afficher {f} dans le prompt`,
+            fsExitText: `✕ Revenir à la vue normale`,
+            fsExitAria: `Quitter le plein écran et revenir à la vue normale`,
+            fsEnter: `Mode plein écran. Appuyez sur Échap ou passez au bouton de sortie pour revenir.`,
+            fsLeave: `Retour à la vue normale.`,
+            exampleShown: `Section Exemple affichée.`,
+            exampleHidden: `Section Exemple masquée.`,
+            msgCopied: `Prompt copié dans le presse-papiers.`,
+            msgCopyFailed: `Échec de la copie. Veuillez sélectionner le texte du prompt et le copier manuellement.`,
+            msgExported: `Prompt exporté au format Markdown.`,
+            msgHidden: `{f} : masqué du prompt.`,
+            msgShown: `{f} : affiché dans le prompt.`,
+            refAdded: `Affinement ajouté au prompt.`,
+            refRemoved: `Affinement retiré du prompt.`,
+            resetConfirm: `Voulez-vous vraiment effacer toutes les saisies ? Cette action est irréversible.`,
+            stats: `{w} mots · {c} caractères`,
+            fields: {
+                persona:    { heading: `# RÔLE`, label: `Rôle`, hint: `Le rôle que l'IA générative doit adopter (p. ex. enseignant·e expérimenté·e du primaire, coordinateur·rice des besoins spécifiques, personnel de direction).`, placeholder: `Agis en tant que...` },
+                context:    { heading: `# CONTEXTE`, label: `Contexte`, hint: `Les éléments de contexte utiles (p. ex. niveau ou classe, matière, type d'école, situation ou document de référence).`, placeholder: `Cette tâche s'inscrit dans...` },
+                objective:  { heading: `# OBJECTIF`, label: `Objectif`, hint: `Ce que vous voulez que l'IA produise ou fasse (p. ex. rédiger une lettre, résumer un rapport, créer une séquence pédagogique).`, placeholder: `L'objectif principal est de...` },
+                audience:   { heading: `# PUBLIC CIBLE`, label: `Public cible`, hint: `Les personnes qui liront ou utiliseront le résultat (p. ex. parents, élèves de 10-11 ans, personnel enseignant, direction).`, placeholder: `Le public cible est...` },
+                boundaries: { heading: `# CONTRAINTES & STYLE`, label: `Contraintes & Style`, hint: `Ton, format, longueur ou éléments à éviter (p. ex. langage clair, listes à puces, une page maximum, sans jargon).`, placeholder: `Veillez à ce que la réponse soit...` },
+                steps:      { heading: `# ÉTAPES / PROCESSUS`, label: `Étapes / Processus`, hint: `Les étapes successives que la réponse doit suivre (p. ex. 1. Résumer la situation. 2. Identifier les points clés. 3. Proposer des solutions.).`, placeholder: `Étape 1 : ...` },
+                example:    { heading: `# EXEMPLE`, label: `Exemple`, hint: `Un exemple du type de résultat attendu — utile pour le ton, la structure ou le niveau de détail.`, placeholder: `Par exemple...` },
+            },
+            refLabels: {
+                clarify: `Me poser d'abord des questions de clarification`,
+                reasoning: `Explique ton raisonnement avant de produire la réponses complète`,
+                uncertainty: `Signaler les incertitudes`,
+                alternatives: `Proposer des alternatives`,
+            },
+            refTexts: {
+                clarify: `Avant de répondre, pose-moi les questions de clarification nécessaires.`,
+                reasoning: `Explique le raisonnement qui sous-tend ta réponse.`,
+                uncertainty: `Indique les points incertains ou dont la fiabilité n'est pas garantie.`,
+                alternatives: `Le cas échéant, propose plusieurs options.`,
+            },
+        },
+    };
+
+    const currentLang = 'fr';
+    const t = () => I18N[currentLang];
+
+    // Resolve a possibly-dotted key path (e.g. "fields.persona.heading") against the active dictionary
+    function resolveI18n(path) {
+        return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), t());
+    }
+
+    // Replace {placeholders} in a translation string
+    function fmt(str, vars) {
+        return str.replace(/\{(\w+)\}/g, (m, k) => (vars && k in vars) ? vars[k] : m);
+    }
+
+    // addKey / removeKey are i18n keys, e.g. 'addSteps' / 'removeSteps'
+    function setOptionalSectionBtnLabel(btn, isVisible, addKey, removeKey) {
+        if (isVisible) {
+            btn.textContent = t()[removeKey];
+            btn.classList.add('active');
+            btn.setAttribute('aria-expanded', 'true');
+        } else {
+            btn.textContent = '';
+            btn.appendChild(document.createTextNode(t()[addKey]));
+            const span = document.createElement('span');
+            span.className = 'optional-suffix';
+            span.textContent = t().optionalSuffix;
+            btn.appendChild(span);
+            btn.classList.remove('active');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function applyLanguage() {
+        const dict = t();
+        document.documentElement.lang = currentLang;
+        document.title = dict.docTitle;
+
+        // Static text / placeholder / aria-label via data attributes
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const v = resolveI18n(el.getAttribute('data-i18n'));
+            if (v != null) el.textContent = v;
+        });
+        document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+            const v = resolveI18n(el.getAttribute('data-i18n-ph'));
+            if (v != null) el.setAttribute('placeholder', v);
+        });
+        document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+            const v = resolveI18n(el.getAttribute('data-i18n-aria'));
+            if (v != null) el.setAttribute('aria-label', v);
+        });
+
+        // Per-field fullscreen aria-labels (composed)
+        fields.forEach(id => {
+            const fsBtn = document.getElementById('fs-btn-' + id);
+            if (fsBtn) fsBtn.setAttribute('aria-label', fmt(dict.fsAria, { f: dict.fields[id].label }));
+        });
+
+        // Hide/show buttons reflect current state with localized labels
+        HIDEABLE_FIELDS.forEach(id => applyHiddenState(id, hiddenFields.has(id)));
+
+        // Optional section toggles reflect current visibility
+        setOptionalSectionBtnLabel(
+            document.getElementById('steps-toggle-btn'),
+            document.getElementById('steps-container').style.display !== 'none',
+            'addSteps', 'removeSteps'
+        );
+        setOptionalSectionBtnLabel(
+            document.getElementById('example-toggle-btn'),
+            document.getElementById('example-container').style.display !== 'none',
+            'addExample', 'removeExample'
+        );
+
+        // Reset save-status to idle label
+        const status = document.getElementById('save-status');
+        if (status) status.innerText = dict.saved;
+
+        updateToggleAllBtn();
+
+        updatePreview();
+    }
+
+    const hiddenFields = new Set();
+    let saveTimer; // debounce handle for the save-status indicator
+
+    window.onload = () => {
+        fields.forEach(id => {
+            const saved = store.get(id);
+            if (saved) document.getElementById(id).value = saved;
+
+            document.getElementById(id).addEventListener('input', () => {
+                updatePreview();
+                saveLocal(id);
+            });
+        });
+        // Keyboard shortcut: Ctrl/Cmd + Shift + C → Copy to Clipboard
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                copyToClipboard();
+            }
+        });
+
+        // Restore hidden field state (labels applied later by applyLanguage)
+        HIDEABLE_FIELDS.forEach(id => {
+            if (store.get(id + '_hidden') === 'true') {
+                hiddenFields.add(id);
+            }
+        });
+
+        // Restore steps visibility (button label applied by applyLanguage)
+        if (store.get('steps_visible') === 'true') {
+            document.getElementById('steps-container').style.display = 'block';
+        }
+
+        // Restore example visibility (button label applied by applyLanguage)
+        if (store.get('example_visible') === 'true') {
+            document.getElementById('example-container').style.display = 'block';
+        }
+
+        // Restore optional refinements
+        REFINEMENTS.forEach(id => {
+            if (store.get('ref_' + id) === 'true') {
+                document.getElementById('ref-' + id).checked = true;
+            }
+        });
+
+        // Restore field order — discard saved order if the developer changed the default
+        const defaultFingerprint = HIDEABLE_FIELDS.join(',');
+        const savedOrder = store.get('field_order');
+        const storedFingerprint = store.get('field_order_default');
+        if (savedOrder && storedFingerprint === defaultFingerprint) {
+            const parsed = savedOrder.split(',').filter(id => HIDEABLE_FIELDS.includes(id));
+            if (parsed.length === HIDEABLE_FIELDS.length) {
+                fieldOrder = parsed;
+                const orderParent = document.getElementById('container-persona').parentNode;
+                const bottomAnchor = document.getElementById('bottom-anchor');
+                fieldOrder.forEach(id => orderParent.insertBefore(document.getElementById('container-' + id), bottomAnchor));
+            }
+        } else {
+            store.remove('field_order');
+            store.set('field_order_default', defaultFingerprint);
+        }
+        initDragAndDrop();
+
+        applyLanguage(); // sets all text + composed labels, then updatePreview()
+    };
+
+    function applyHiddenState(id, isHidden) {
+        const container = document.getElementById('container-' + id);
+        const btn = document.getElementById('hide-btn-' + id);
+        container.classList.toggle('field-hidden', isHidden);
+        btn.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+        const label = t().fields[id].label;
+        btn.setAttribute('aria-label', isHidden ? fmt(t().show, { f: label }) : fmt(t().hide, { f: label }));
+    }
+
+    function toggleHide(id) {
+        const isNowHidden = !hiddenFields.has(id);
+        isNowHidden ? hiddenFields.add(id) : hiddenFields.delete(id);
+        store.set(id + '_hidden', isNowHidden ? 'true' : 'false');
+        applyHiddenState(id, isNowHidden);
+        updatePreview();
+        const label = t().fields[id].label;
+        announce(isNowHidden ? fmt(t().msgHidden, { f: label }) : fmt(t().msgShown, { f: label }));
+    }
+
+    function onRefinementChange(id) {
+        const checked = document.getElementById('ref-' + id).checked;
+        store.set('ref_' + id, checked ? 'true' : 'false');
+        updatePreview();
+        announce(checked ? t().refAdded : t().refRemoved);
+    }
+
+    function updatePreview() {
+        const dict = t();
+
+        // F2: skip empty fields entirely
+        const segments = fieldOrder
+            .filter(id => !hiddenFields.has(id) && document.getElementById(id).value.trim())
+            .map(id => dict.fields[id].heading + '\n' + document.getElementById(id).value);
+
+        const stepsVisible = document.getElementById('steps-container').style.display !== 'none';
+        const stepsVal = document.getElementById('steps').value.trim();
+        if (stepsVisible && stepsVal) segments.push(dict.fields.steps.heading + '\n' + stepsVal);
+
+        const exampleVisible = document.getElementById('example-container').style.display !== 'none';
+        const exampleVal = document.getElementById('example').value.trim();
+        if (exampleVisible && exampleVal) segments.push(dict.fields.example.heading + '\n' + exampleVal);
+
+        const refinements = REFINEMENTS
+            .filter(id => document.getElementById('ref-' + id).checked)
+            .map(id => '- ' + dict.refTexts[id]);
+        if (refinements.length) segments.push(dict.additionalInstructions + '\n' + refinements.join('\n'));
+
+        const template = segments.join('\n\n');
+        const highlighted = template.replace(/(# [A-ZÀ-ÖØ-Þ0-9 &\/]+)/g, '<span class="tag-h1">$1</span>');
+        document.getElementById('preview-body').innerHTML = highlighted;
+
+        // F5: word count with warning thresholds
+        const words = template.trim().split(/\s+/).filter(Boolean).length;
+        const chars = template.length;
+        const statsEl = document.getElementById('prompt-stats');
+        statsEl.textContent = fmt(dict.stats, { w: words, c: chars.toLocaleString() });
+        statsEl.className = 'prompt-stats' + (words > 800 ? ' stats-danger' : words > 500 ? ' stats-warning' : '');
+
+        // F1: completion indicator
+        updateCompletionIndicator();
+    }
+
+    function announce(msg) {
+        const el = document.getElementById('a11y-announce');
+        el.textContent = '';
+        // Small delay so screen readers re-announce even identical text
+        setTimeout(() => { el.textContent = msg; }, 50);
+    }
+
+    function saveLocal(id) {
+        store.set(id, document.getElementById(id).value);
+        const status = document.getElementById('save-status');
+        status.innerText = t().syncing;
+        status.style.color = "#f57c00"; /* darkened amber for contrast on #fafafa */
+
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            status.innerText = t().savedToBrowser;
+            status.style.color = "#2e7d32"; /* darkened green for WCAG AA */
+        }, 1000);
+    }
+
+    function toggleFS(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('fullscreen-active');
+        if (el.classList.contains('fullscreen-active')) {
+            el.focus();
+            // Trap focus: Escape exits fullscreen
+            el.onkeydown = (e) => { if (e.key === "Escape") toggleFS(id); };
+
+            const exitBtn = document.createElement('button');
+            exitBtn.className = 'fs-exit-btn';
+            exitBtn.id = 'fs-exit-btn';
+            exitBtn.textContent = t().fsExitText;
+            exitBtn.setAttribute('aria-label', t().fsExitAria);
+            exitBtn.onclick = () => toggleFS(id);
+            // Keep Tab focus inside fullscreen (textarea ↔ exit button)
+            exitBtn.onkeydown = (e) => {
+                if (e.key === 'Tab') { e.preventDefault(); el.focus(); }
+                if (e.key === 'Escape') toggleFS(id);
+            };
+            el.onkeydown = (e) => {
+                if (e.key === 'Escape') toggleFS(id);
+                if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); exitBtn.focus(); }
+            };
+            document.body.appendChild(exitBtn);
+            announce(t().fsEnter);
+        } else {
+            const exitBtn = document.getElementById('fs-exit-btn');
+            if (exitBtn) exitBtn.remove();
+            el.onkeydown = null;
+            el.focus(); // return focus to the field so keyboard focus is not lost
+            announce(t().fsLeave);
+        }
+    }
+
+    function toggleOptionalSection(id) {
+        const container = document.getElementById(id + '-container');
+        const btn = document.getElementById(id + '-toggle-btn');
+        const isVisible = container.style.display !== 'none';
+        const keys = id === 'steps'
+            ? { add: 'addSteps',   remove: 'removeSteps',   shown: 'stepsShown',   hidden: 'stepsHidden'   }
+            : { add: 'addExample', remove: 'removeExample', shown: 'exampleShown', hidden: 'exampleHidden' };
+        if (isVisible) {
+            container.style.display = 'none';
+            setOptionalSectionBtnLabel(btn, false, keys.add, keys.remove);
+            store.set(id + '_visible', 'false');
+            announce(t()[keys.hidden]);
+        } else {
+            container.style.display = 'block';
+            setOptionalSectionBtnLabel(btn, true, keys.add, keys.remove);
+            store.set(id + '_visible', 'true');
+            document.getElementById(id).focus();
+            announce(t()[keys.shown]);
+        }
+        updatePreview();
+    }
+
+    function getPlainText() {
+        return document.getElementById('preview-body').innerText.replace(/^# /gm, '');
+    }
+
+    function copyToClipboard() {
+        const text = getPlainText();
+        const btn = document.querySelector('.btn-copy');
+        const showCopied = () => {
+            btn.innerText = t().copied;
+            announce(t().msgCopied);
+            setTimeout(() => btn.innerText = t().copy, 2000);
+        };
+        const showFailed = () => {
+            announce(t().msgCopyFailed);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text)
+                .then(showCopied)
+                .catch(() => { if (fallbackCopy(text)) showCopied(); else showFailed(); });
+        } else {
+            if (fallbackCopy(text)) showCopied(); else showFailed();
+        }
+    }
+
+    // Fallback for contexts where the async Clipboard API is unavailable (e.g. some file:// pages)
+    function fallbackCopy(text) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'absolute';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return ok;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // F1 — completion indicator
+    function updateCompletionIndicator() {
+        const visibleFields = fieldOrder.filter(id => !hiddenFields.has(id));
+        const stVis = document.getElementById('steps-container').style.display !== 'none';
+        const exVis = document.getElementById('example-container').style.display !== 'none';
+        const total = visibleFields.length + (stVis ? 1 : 0) + (exVis ? 1 : 0);
+        const filled = visibleFields.filter(id => document.getElementById(id).value.trim()).length
+            + (stVis && document.getElementById('steps').value.trim() ? 1 : 0)
+            + (exVis && document.getElementById('example').value.trim() ? 1 : 0);
+        const pct = total > 0 ? Math.round(filled / total * 100) : 0;
+        document.getElementById('completion-fill').style.width = pct + '%';
+        document.getElementById('completion-text').textContent = fmt(t().completion, { f: filled, total });
+    }
+
+    // F3 — collapse-all view (hides textareas/hints in left panel, does not affect prompt output)
+    function toggleAllFields() {
+        allFieldsViewCollapsed = !allFieldsViewCollapsed;
+        document.querySelector('.panel-scroll').classList.toggle('fields-view-collapsed', allFieldsViewCollapsed);
+        updateToggleAllBtn();
+    }
+
+    function updateToggleAllBtn() {
+        const btn = document.getElementById('toggle-all-btn');
+        if (!btn) return;
+        btn.textContent = allFieldsViewCollapsed ? t().showAll : t().hideAll;
+    }
+
+    function triggerDownload(text, filename, mimeType) {
+        const blob = new Blob([text], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Export plain text (.txt)
+    function downloadPlainText() {
+        triggerDownload(getPlainText(), `prompt_${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
+        announce(t().msgExported);
+    }
+
+    // Export Markdown (.md) — uses innerText to preserve rendered whitespace
+    function downloadPrompt() {
+        triggerDownload(
+            document.getElementById('preview-body').innerText,
+            `prompt_${new Date().toISOString().split('T')[0]}.md`,
+            'text/markdown'
+        );
+        announce(t().msgExported);
+    }
+
+    function initDragAndDrop() {
+        let draggedId = null;
+
+        HIDEABLE_FIELDS.forEach(id => {
+            const container = document.getElementById('container-' + id);
+            const handle = container.querySelector('.drag-handle');
+            handle.setAttribute('draggable', 'true');
+
+            handle.addEventListener('dragstart', e => {
+                draggedId = id;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', id);
+                e.dataTransfer.setDragImage(container, 20, 20);
+                requestAnimationFrame(() => container.classList.add('dragging'));
+            });
+
+            handle.addEventListener('dragend', () => {
+                container.classList.remove('dragging');
+                document.querySelectorAll('.input-container.drag-over')
+                    .forEach(el => el.classList.remove('drag-over'));
+                draggedId = null;
+            });
+
+            container.addEventListener('dragover', e => {
+                if (!draggedId || draggedId === id) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                document.querySelectorAll('.input-container.drag-over')
+                    .forEach(el => el.classList.remove('drag-over'));
+                container.classList.add('drag-over');
+            });
+
+            container.addEventListener('dragleave', e => {
+                if (!container.contains(e.relatedTarget)) {
+                    container.classList.remove('drag-over');
+                }
+            });
+
+            container.addEventListener('drop', e => {
+                e.preventDefault();
+                container.classList.remove('drag-over');
+                if (!draggedId || draggedId === id) return;
+                applyFieldOrder(draggedId, id);
+            });
+        });
+    }
+
+    function applyFieldOrder(draggedId, targetId) {
+        fieldOrder.splice(fieldOrder.indexOf(draggedId), 1);
+        fieldOrder.splice(fieldOrder.indexOf(targetId), 0, draggedId);
+        const parent = document.getElementById('container-' + targetId).parentNode;
+        parent.insertBefore(
+            document.getElementById('container-' + draggedId),
+            document.getElementById('container-' + targetId)
+        );
+        store.set('field_order', fieldOrder.join(','));
+        updatePreview();
+    }
+
+    function resetForm() {
+        if(confirm(t().resetConfirm)) {
+            fields.forEach(id => {
+                document.getElementById(id).value = '';
+                store.remove(id);
+            });
+            HIDEABLE_FIELDS.forEach(id => {
+                hiddenFields.delete(id);
+                store.remove(id + '_hidden');
+                applyHiddenState(id, false);
+            });
+            document.getElementById('steps-container').style.display = 'none';
+            setOptionalSectionBtnLabel(document.getElementById('steps-toggle-btn'), false, 'addSteps', 'removeSteps');
+            store.remove('steps_visible');
+            document.getElementById('example-container').style.display = 'none';
+            setOptionalSectionBtnLabel(document.getElementById('example-toggle-btn'), false, 'addExample', 'removeExample');
+            store.remove('example_visible');
+            REFINEMENTS.forEach(id => {
+                document.getElementById('ref-' + id).checked = false;
+                store.remove('ref_' + id);
+            });
+            // Reset field order
+            store.remove('field_order');
+            fieldOrder = [...HIDEABLE_FIELDS];
+            const resetParent = document.getElementById('container-persona').parentNode;
+            const resetAnchor = document.getElementById('bottom-anchor');
+            HIDEABLE_FIELDS.forEach(id => resetParent.insertBefore(document.getElementById('container-' + id), resetAnchor));
+            updateToggleAllBtn();
+            updatePreview();
+        }
+    }
+</script>
+
+</body>
+</html>
